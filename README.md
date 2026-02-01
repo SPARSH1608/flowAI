@@ -1,135 +1,103 @@
-# Turborepo starter
+# AI Ads - Frontend Workflow Documentation
 
-This Turborepo starter is maintained by the Turborepo core team.
+This document provides a comprehensive overview of the **Frontend Workflow Editor** implementation, including its architecture, state management, and component breakdown.
 
-## Using this example
+## 🏗 System Architecture
 
-Run the following command:
+The workflow editor is built using **Next.js**, **React Flow**, and **Zustand**. It provides a canvas-based interface where users can drag-and-drop nodes, connect them via typed ports, and configure properties to build AI generation pipelines.
 
-```sh
-npx create-turbo@latest
-```
+### Key Components
 
-## What's inside?
+1.  **WorkflowCanvas (`src/components/canvas/WorkflowCanvas.tsx`)**
+    *   The core component that renders the React Flow instance.
+    *   Handles default canvas behaviors: pan, zoom, background grid, and MiniMap.
+    *   Manages user interactions: node selection, connection creation, and deletion events.
+    *   Implements the "Delete Mode" (scissors tool) logic.
 
-This Turborepo includes the following packages/apps:
+2.  **FloatingSidebar (`src/components/panels/FloatingSidebar.tsx`)**
+    *   A dock-style sidebar for accessing tools.
+    *   **Play Button**: Opens the "Add Node" panel.
+    *   **Scissors Button**: Toggles the global "Delete Mode".
+    *   Contains the node palette for dragging new nodes onto the canvas (Text, Image Gen, Assistant, etc.).
 
-### Apps and Packages
+3.  **WorkflowStore (`src/store/workflowStore.ts`)**
+    *   A global Zustand store that persists the graph state to `localStorage`.
+    *   **State**:
+        *   `nodes`: Array of all active nodes with their position and config data.
+        *   `edges`: Array of connections between nodes.
+        *   `deleteMode`: Boolean flag for the scissors tool.
+    *   **Actions**: `addNode`, `deleteNode`, `deleteEdge`, `hydrate` (load from storage).
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+---
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+## 🧩 Nodes & Components
 
-### Utilities
+All nodes serve as wrapper components around `BaseNode`, maintaining a consistent visual style (dark theme, rounded corners, "premium" look).
 
-This Turborepo has some additional tools already setup for you:
+### 1. Base Components
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+*   **BaseNode (`src/components/nodes/BaseNode.tsx`)**
+    *   The container for all specific nodes.
+    *   Handles selection state (blue border/glow).
+    *   Provides common UI elements: Header with title & icon, Status Badge, Resizer handle.
+    *   Displays a floating toolbar when selected (Delete button, Play button).
 
-### Build
+*   **ExternalPort (`src/components/ports/ExternalPort.tsx`)**
+    *   Custom connection handle component.
+    *   **Visuals**: Renders completely outside the node body as a small, minimal "socket" circle.
+    *   **Interactivity**: Shows a tooltip on hover with the port type name.
+    *   **Types**: Supports different visual themes for `text` (Green), `image` (Blue), `video` (Purple), etc.
 
-To build all apps and packages, run the following command:
+### 2. Node Types
 
-```
-cd my-turborepo
+The following nodes are currently registered and implemented:
 
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
+| Node Type | Component | Description | Inputs | Outputs |
+| :--- | :--- | :--- | :--- | :--- |
+| **TEXT_NODE** | `TextNode` | Basic text input block. | - | `text` |
+| **IMAGE_NODE** | `ImageNode` | Displays an uploaded or generated image. | - | `image` |
+| **IMAGE_GENERATION_NODE** | `ImageGenerationNode` | Configures AI image generation (Prompt, Size, Steps). | `text` (Prompt)<br>`image[]` (Ref) | `image[]` |
+| **ASSISTANT_NODE** | `AssistantNode` | LLM-powered chat or instruction block. | `text`<br>`image[]` | `text` |
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
-```
+### 3. Edges
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+*   **DeletableEdge (`src/components/edges/DeletableEdge.tsx`)**
+    *   The default edge type.
+    *   Renders a connection line with dynamic colors based on the source port type (e.g., Green line for text connections).
+    *   Shows a clickable `X` button when selected to easily remove connections.
 
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+---
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+## 🖌 UX Fundamentals
 
-### Develop
+### Visual Style
+*   **Theme**: Deep Dark Mode (`bg-[#0a0a0a]`).
+*   **Palette**: Muted, professional colors ("Dull" aesthetic).
+    *   Text: `#52796F`
+    *   Image: `#5C7C99`
+    *   Video: `#7B6496`
+*   **Typography**: Clean, uppercase labels with tracking for a technical feel.
 
-To develop all apps and packages, run the following command:
+### Interaction Modes
+1.  **Standard Mode**:
+    *   Drag nodes to move.
+    *   Drag from ports to connect.
+    *   Click to select (shows toolbar).
+2.  **Delete Mode (Scissors)**:
+    *   Activated via the Sidebar.
+    *   Cursor changes to a red scissors icon.
+    *   Clicking ANY node or edge instantly deletes it.
+    *   Automatically turns off after one use to prevent accidents.
 
-```
-cd my-turborepo
+---
 
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+## 🛠 Adding New Nodes
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
+To add a new node type:
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+1.  **Create Component**: Create a new file in `src/components/nodes/` (e.g., `MyNewNode.tsx`).
+2.  **Use BaseNode**: Wrap your content in `<BaseNode>`.
+3.  **Add Ports**: Use `<ExternalPort>` for inputs (Left) and outputs (Right).
+4.  **Register**: Import and add it to `nodeTypes` in `src/components/nodes/index.ts`.
+5.  **Define Type**: Add the type string key to `NodeType` in `src/types/workflow.ts`.
+6.  **Add to Sidebar**: Create a `<NodeButton>` entry in `FloatingSidebar.tsx`.

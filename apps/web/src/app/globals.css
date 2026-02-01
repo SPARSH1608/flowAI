@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@import "reactflow/dist/style.css";
+
+.react-flow__pane {
+  background-color: #0a0a0a;
+}
+
+/* Force override cursors when delete mode is active */
+.delete-mode-active,
+.delete-mode-active * {
+  cursor: url("https://api.iconify.design/lucide:scissors.svg?color=%23ef4444&width=24&height=24") 12 12, auto !important;
+}
+
+/* Hide React Flow Watermark */
+.react-flow__attribution {
+  display: none !important;
+}
