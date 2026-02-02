@@ -12,6 +12,8 @@ import ReactFlow, {
     applyEdgeChanges,
     NodeChange,
     EdgeChange,
+    useReactFlow,
+    Viewport,
 } from "reactflow";
 import { useWorkflowStore } from "@/store/workflowStore";
 import { addNode } from "./CanvasContextMenu";
@@ -19,6 +21,9 @@ import { addNode } from "./CanvasContextMenu";
 import { nodeTypes } from "@/components/nodes";
 import DeletableEdge from "@/components/edges/DeletableEdge";
 import { PORT_CONNECTIONS } from "@/types/ports";
+import { useEffect, useState } from "react";
+
+const VIEWPORT_STORAGE_KEY = "workflow-viewport";
 
 const edgeTypes = {
     default: DeletableEdge,
@@ -45,7 +50,8 @@ function isValidConnection(connection: any) {
 
 export default function WorkflowCanvas() {
     const { nodes, edges, setNodes, setEdges, deleteNode, deleteEdge, deleteMode, toggleDeleteMode } = useWorkflowStore();
-
+    const { fitView, setViewport } = useReactFlow();
+    const [isInitialized, setIsInitialized] = useState(false);
     const onNodesChange = (changes: NodeChange[]) => {
         setNodes(applyNodeChanges(changes, nodes as Node[]) as any);
     };
@@ -66,6 +72,37 @@ export default function WorkflowCanvas() {
         setEdges(addEdge(edge, edges as Edge[]) as any);
     };
 
+    // Restore viewport from localStorage on mount
+    useEffect(() => {
+        const savedViewport = localStorage.getItem(VIEWPORT_STORAGE_KEY);
+        if (savedViewport) {
+            try {
+                const viewport = JSON.parse(savedViewport) as Viewport;
+                setViewport(viewport, { duration: 0 });
+            } catch (e) {
+                console.error("Failed to restore viewport:", e);
+            }
+        }
+        setIsInitialized(true);
+    }, [setViewport]);
+
+    // Only fitView on first load if no saved viewport exists
+    useEffect(() => {
+        if (isInitialized && nodes.length > 0) {
+            const savedViewport = localStorage.getItem(VIEWPORT_STORAGE_KEY);
+            if (!savedViewport) {
+                setTimeout(() => {
+                    fitView({ padding: 0.2 });
+                }, 50);
+            }
+        }
+    }, [nodes.length, fitView, isInitialized]);
+
+    // Save viewport to localStorage on move/zoom
+    const onMove = (_event: any, viewport: Viewport) => {
+        localStorage.setItem(VIEWPORT_STORAGE_KEY, JSON.stringify(viewport));
+    };
+
     return (
         <div
             className={`w-full h-full ${deleteMode ? 'delete-mode-active' : ''}`}
@@ -78,6 +115,7 @@ export default function WorkflowCanvas() {
                 isValidConnection={isValidConnection}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
+                onMove={onMove}
                 onNodeClick={(_, node) => {
                     if (deleteMode) {
                         deleteNode(node.id);
@@ -91,17 +129,6 @@ export default function WorkflowCanvas() {
                     }
                 }}
                 onConnect={onConnect}
-                fitView
-                onPaneContextMenu={(e) => {
-                    e.preventDefault();
-
-                    const position = {
-                        x: e.clientX,
-                        y: e.clientY,
-                    };
-
-                    addNode("TEXT_NODE", position);
-                }}
             >
                 {/* Grid background */}
                 <Background

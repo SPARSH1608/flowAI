@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { ReactFlowProvider } from "reactflow";
 import { useWorkflowStore } from "@/store/workflowStore";
 import WorkflowCanvas from "@/components/canvas/WorkflowCanvas";
 import FloatingSidebar from "@/components/panels/FloatingSidebar";
@@ -18,7 +19,9 @@ export default function Page() {
       <TopBar />
       <main className="relative flex-1 overflow-hidden">
         <FloatingSidebar />
-        <WorkflowCanvas />
+        <ReactFlowProvider>
+          <WorkflowCanvas />
+        </ReactFlowProvider>
       </main>
     </div>
   );
