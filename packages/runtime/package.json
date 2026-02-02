@@ -1,0 +1,21 @@
+{
+  "name": "@repo/runtime",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@repo/typescript-config": "*",
+    "@types/bun": "latest",
+    "@repo/executor": "*"
+  },
+  "exports": {
+    ".": "./index.ts"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@langchain/core": "^1.1.18",
+    "@langchain/langgraph": "^1.1.2"
+  }
+}

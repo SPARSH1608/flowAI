@@ -5,7 +5,10 @@
   "private": true,
   "devDependencies": {
     "@types/bun": "latest",
-    "prisma": "^7.3.0"
+    "prisma": "^7.3.0",
+    "@repo/schema": "*",
+    "@repo/compiler": "*",
+    "@repo/runtime": "*"
   },
   "scripts": {
     "dev": "bun run src/server.ts"
