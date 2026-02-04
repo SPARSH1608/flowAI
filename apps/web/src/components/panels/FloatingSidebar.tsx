@@ -16,13 +16,15 @@ import {
     Settings,
     MessageSquare,
     Scissors,
+    Images,
 } from "lucide-react";
 import { addNode } from "@/components/canvas/CanvasContextMenu";
 import { NodeType } from "@/types/workflow";
 import { useWorkflowStore } from "@/store/workflowStore";
+import MediaLibrary from "./MediaLibrary";
 
 export default function FloatingSidebar() {
-    const [activeTab, setActiveTab] = useState<"add" | "settings" | null>(null);
+    const [activeTab, setActiveTab] = useState<"add" | "media" | "settings" | null>(null);
     const toggleDeleteMode = useWorkflowStore((s) => s.toggleDeleteMode);
     const deleteMode = useWorkflowStore((s) => s.deleteMode);
 
@@ -38,6 +40,9 @@ export default function FloatingSidebar() {
                 </button>
 
                 <div className="flex flex-col gap-2 w-full items-center">
+                    <RailButton active={activeTab === "media"} onClick={() => setActiveTab(activeTab === "media" ? null : "media")}>
+                        <Images size={20} />
+                    </RailButton>
                     <RailButton active={deleteMode} onClick={toggleDeleteMode}>
                         <Scissors size={20} />
                     </RailButton>
@@ -95,6 +100,26 @@ export default function FloatingSidebar() {
                             </button>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* Media Library Panel */}
+            {activeTab === "media" && (
+                <div className="flex w-64 flex-col gap-4 rounded-3xl bg-neutral-900/95 p-4 shadow-2xl backdrop-blur-md border border-neutral-800/50">
+                    {/* Search */}
+                    <div className="relative">
+                        <Search className="absolute left-3 top-2.5 text-neutral-500" size={16} />
+                        <input
+                            type="text"
+                            placeholder="Search media"
+                            className="w-full rounded-xl bg-neutral-800 py-2 pl-9 pr-4 text-sm text-neutral-200 placeholder-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-600"
+                        />
+                    </div>
+
+                    <MediaLibrary onImageSelect={(imageData) => {
+                        addNode("IMAGE_NODE", { x: 500, y: 300 }, { config: imageData });
+                        setActiveTab(null);
+                    }} />
                 </div>
             )}
         </div>

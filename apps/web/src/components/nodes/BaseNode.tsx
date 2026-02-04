@@ -12,6 +12,7 @@ interface BaseNodeProps {
     children: ReactNode;
     status?: any;
     selected?: boolean;
+    hideDefaultResult?: boolean;
 }
 
 export default function BaseNode({
@@ -20,6 +21,7 @@ export default function BaseNode({
     children,
     status,
     selected,
+    hideDefaultResult,
 }: BaseNodeProps) {
     const deleteNode = useWorkflowStore((s) => s.deleteNode);
 
@@ -58,15 +60,15 @@ export default function BaseNode({
                 {/* Content Box */}
                 <div className="p-4 space-y-3 h-full flex flex-col">
                     {children}
+
+                    {/* Execution Result Display */}
+                    {!hideDefaultResult && <ExecutionResult id={id} />}
                 </div>
             </div>
 
             {/* Selected Toolbar (Below Node) */}
             {selected && (
                 <div className="nodrag absolute -bottom-14 left-1/2 -translate-x-1/2 flex items-center gap-1 p-1.5 bg-[#1F1F1F] rounded-lg border border-neutral-800 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2">
-                    <ToolbarButton icon={<Play size={14} fill="currentColor" />} onClick={() => { }} />
-                    <div className="w-px h-4 bg-neutral-700 mx-1" />
-                    <ToolbarButton icon={<MousePointer2 size={14} />} onClick={() => { }} />
                     <ToolbarButton icon={<Trash2 size={14} />} onClick={() => deleteNode(id)} danger />
                 </div>
             )}
@@ -83,4 +85,52 @@ function ToolbarButton({ icon, onClick, danger }: { icon: React.ReactNode; onCli
             {icon}
         </button>
     )
+}
+
+function ExecutionResult({ id }: { id: string }) {
+    const output = useWorkflowStore((s) => s.executionResults?.[id]);
+
+    if (!output) return null;
+
+    return (
+        <div className="mt-2 pt-2 border-t border-neutral-800">
+            <div className="text-xs font-medium text-neutral-500 mb-1.5 uppercase tracking-wide">
+                Output
+            </div>
+
+            <div className="bg-black/20 rounded-lg overflow-hidden">
+                {output.image ? (
+                    <div className="relative aspect-video w-full">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                            src={output.image}
+                            alt="Output"
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
+                ) : output['image[]'] && Array.isArray(output['image[]']) ? (
+                    <div className="grid grid-cols-2 gap-0.5">
+                        {output['image[]'].map((img: string, i: number) => (
+                            <div key={i} className="relative aspect-square w-full">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                    src={img}
+                                    alt={`Output ${i}`}
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                        ))}
+                    </div>
+                ) : output.text ? (
+                    <div className="p-2 text-sm text-neutral-300">
+                        {output.text}
+                    </div>
+                ) : (
+                    <pre className="p-2 text-[10px] text-neutral-400 overflow-x-auto">
+                        {JSON.stringify(output, null, 2)}
+                    </pre>
+                )}
+            </div>
+        </div>
+    );
 }

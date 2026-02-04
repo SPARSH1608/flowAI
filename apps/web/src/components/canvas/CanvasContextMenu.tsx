@@ -6,7 +6,8 @@ import { nanoid } from "nanoid";
 
 export function addNode(
     type: NodeType,
-    position: { x: number; y: number }
+    position: { x: number; y: number },
+    data?: { config?: any }
 ) {
     useWorkflowStore.getState().addNode({
         id: nanoid(),
@@ -14,7 +15,7 @@ export function addNode(
         position,
         data: {
             label: type,
-            config: {},
+            config: data?.config || {},
         },
     });
 }

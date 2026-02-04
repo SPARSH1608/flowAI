@@ -103,9 +103,49 @@ export default function WorkflowCanvas() {
         localStorage.setItem(VIEWPORT_STORAGE_KEY, JSON.stringify(viewport));
     };
 
+    // Handle drop from media library
+    const onDrop = (event: React.DragEvent) => {
+        event.preventDefault();
+
+        const data = event.dataTransfer.getData("application/reactflow");
+        if (!data) return;
+
+        try {
+            const { type, imageData } = JSON.parse(data);
+            if (type === "IMAGE_NODE" && imageData) {
+                const reactFlowBounds = (event.target as HTMLElement).getBoundingClientRect();
+                const position = {
+                    x: event.clientX - reactFlowBounds.left,
+                    y: event.clientY - reactFlowBounds.top,
+                };
+
+                const newNode = {
+                    id: `${type.toLowerCase()}-${Date.now()}`,
+                    type,
+                    position,
+                    data: {
+                        label: "Image",
+                        config: imageData,
+                    },
+                };
+
+                setNodes([...nodes, newNode as any]);
+            }
+        } catch (err) {
+            console.error("Failed to parse drop data:", err);
+        }
+    };
+
+    const onDragOver = (event: React.DragEvent) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "copy";
+    };
+
     return (
         <div
             className={`w-full h-full ${deleteMode ? 'delete-mode-active' : ''}`}
+            onDrop={onDrop}
+            onDragOver={onDragOver}
         >
             <ReactFlow
                 nodes={nodes as Node[]}

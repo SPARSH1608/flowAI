@@ -17,5 +17,6 @@ export function serializeWorkflow(
             nodes,
             edges,
         },
+        executionResults: useWorkflowStore.getState().executionResults,
     };
 }

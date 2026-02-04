@@ -43,3 +43,14 @@ model Execution {
 
   @@index([workflowId])
 }
+
+model Image {
+  id          String   @id @default(uuid())
+  filename    String
+  mimetype    String
+  size        Int
+  path        String
+  url         String
+  purpose     String?
+  createdAt   DateTime @default(now())
+}

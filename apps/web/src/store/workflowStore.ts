@@ -8,19 +8,24 @@ interface WorkflowState {
     edges: WorkflowEdge[];
 
     addNode: (node: WorkflowNode) => void;
-    setNodes: (nodes: WorkflowNode[]) => void;
+    setNodes: (nodes: WorkflowNode[] | ((prev: WorkflowNode[]) => WorkflowNode[])) => void;
     setEdges: (edges: WorkflowEdge[]) => void;
     deleteNode: (id: string) => void;
     deleteEdge: (id: string) => void;
     deleteMode: boolean;
     toggleDeleteMode: () => void;
     hydrate: () => void;
+    executionResults: Record<string, any>;
+    setExecutionResults: (results: Record<string, any>) => void;
 }
 
 export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     nodes: [],
     edges: [],
     deleteMode: false,
+    executionResults: {},
+
+    setExecutionResults: (results) => set({ executionResults: results }),
 
     addNode: (node) =>
         set((state) => {
@@ -34,7 +39,8 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
 
     setNodes: (nodes) =>
         set((state) => {
-            const next = { nodes, edges: state.edges };
+            const nextNodes = typeof nodes === 'function' ? nodes(state.nodes) : nodes;
+            const next = { nodes: nextNodes, edges: state.edges };
             if (typeof window !== "undefined") {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
             }
