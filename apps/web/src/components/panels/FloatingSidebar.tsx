@@ -30,7 +30,6 @@ export default function FloatingSidebar() {
 
     return (
         <div className="fixed left-4 top-20 z-50 flex h-[calc(100vh-6rem)] gap-2">
-            {/* Icon Rail */}
             <div className="flex w-12 flex-col items-center gap-4 rounded-full bg-neutral-900 py-4 shadow-xl border border-neutral-800/50">
                 <button
                     className={`flex h-10 w-10 items-center justify-center rounded-full transition-transform hover:scale-105 active:scale-95 ${activeTab === "add" ? 'bg-white text-black' : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'}`}
@@ -58,10 +57,8 @@ export default function FloatingSidebar() {
                 </div>
             </div>
 
-            {/* Panel */}
             {activeTab === "add" && (
                 <div className="flex w-64 flex-col gap-4 rounded-3xl bg-neutral-900/95 p-4 shadow-2xl backdrop-blur-md border border-neutral-800/50">
-                    {/* Search */}
                     <div className="relative">
                         <Search className="absolute left-3 top-2.5 text-neutral-500" size={16} />
                         <input
@@ -77,7 +74,6 @@ export default function FloatingSidebar() {
                     </div>
 
                     <div className="flex-1 overflow-y-auto pr-1 scrollbar-hide">
-                        {/* Nodes Section */}
                         <div className="mb-4">
                             <h3 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-neutral-500">
                                 Nodes
@@ -92,7 +88,6 @@ export default function FloatingSidebar() {
                             </div>
                         </div>
 
-                        {/* Utilities Section */}
                         <div>
                             <button className="flex w-full items-center justify-between px-2 py-2 text-xs font-semibold uppercase tracking-wider text-neutral-500 hover:text-neutral-300">
                                 <span>Utilities</span>
@@ -103,10 +98,8 @@ export default function FloatingSidebar() {
                 </div>
             )}
 
-            {/* Media Library Panel */}
             {activeTab === "media" && (
                 <div className="flex w-64 flex-col gap-4 rounded-3xl bg-neutral-900/95 p-4 shadow-2xl backdrop-blur-md border border-neutral-800/50">
-                    {/* Search */}
                     <div className="relative">
                         <Search className="absolute left-3 top-2.5 text-neutral-500" size={16} />
                         <input

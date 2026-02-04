@@ -1,15 +1,14 @@
 import { SerializedWorkflow } from "@/types/serializedWorkflow";
 import { useWorkflowStore } from "@/store/workflowStore";
 
-export function serializeWorkflow(
-    name = "Untitled Workflow"
-): SerializedWorkflow {
-    const { nodes, edges } = useWorkflowStore.getState();
+export function serializeWorkflow(): SerializedWorkflow {
+    const { nodes, edges, metadata, executionResults } = useWorkflowStore.getState();
 
     return {
         version: "v1",
         metadata: {
-            name,
+            name: metadata.name,
+            description: metadata.description,
             createdAt: Date.now(),
             updatedAt: Date.now(),
         },
@@ -17,6 +16,6 @@ export function serializeWorkflow(
             nodes,
             edges,
         },
-        executionResults: useWorkflowStore.getState().executionResults,
+        executionResults,
     };
 }

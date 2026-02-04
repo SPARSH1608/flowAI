@@ -72,7 +72,6 @@ export default function WorkflowCanvas() {
         setEdges(addEdge(edge, edges as Edge[]) as any);
     };
 
-    // Restore viewport from localStorage on mount
     useEffect(() => {
         const savedViewport = localStorage.getItem(VIEWPORT_STORAGE_KEY);
         if (savedViewport) {
@@ -86,7 +85,6 @@ export default function WorkflowCanvas() {
         setIsInitialized(true);
     }, [setViewport]);
 
-    // Only fitView on first load if no saved viewport exists
     useEffect(() => {
         if (isInitialized && nodes.length > 0) {
             const savedViewport = localStorage.getItem(VIEWPORT_STORAGE_KEY);
@@ -98,12 +96,9 @@ export default function WorkflowCanvas() {
         }
     }, [nodes.length, fitView, isInitialized]);
 
-    // Save viewport to localStorage on move/zoom
     const onMove = (_event: any, viewport: Viewport) => {
         localStorage.setItem(VIEWPORT_STORAGE_KEY, JSON.stringify(viewport));
     };
-
-    // Handle drop from media library
     const onDrop = (event: React.DragEvent) => {
         event.preventDefault();
 
@@ -170,14 +165,12 @@ export default function WorkflowCanvas() {
                 }}
                 onConnect={onConnect}
             >
-                {/* Grid background */}
                 <Background
                     gap={24}
                     size={1}
                     color="#222"
                 />
 
-                {/* Zoom & fit controls */}
                 <Controls />
 
 

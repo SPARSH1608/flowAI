@@ -12,4 +12,5 @@ export interface SerializedWorkflow {
         nodes: WorkflowNode[];
         edges: WorkflowEdge[];
     };
+    executionResults?: Record<string, any>;
 }

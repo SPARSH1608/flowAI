@@ -1,11 +1,15 @@
 import { create } from "zustand";
 import { WorkflowNode, WorkflowEdge } from "@/types/workflow";
 
-const STORAGE_KEY = "ai-workflow";
+const STORAGE_KEY = null; // Unused
 
 interface WorkflowState {
     nodes: WorkflowNode[];
     edges: WorkflowEdge[];
+    metadata: {
+        name: string;
+        description?: string;
+    };
 
     addNode: (node: WorkflowNode) => void;
     setNodes: (nodes: WorkflowNode[] | ((prev: WorkflowNode[]) => WorkflowNode[])) => void;
@@ -17,82 +21,59 @@ interface WorkflowState {
     hydrate: () => void;
     executionResults: Record<string, any>;
     setExecutionResults: (results: Record<string, any>) => void;
+    setWorkflow: (workflow: { nodes: WorkflowNode[]; edges: WorkflowEdge[]; executionResults?: Record<string, any>; metadata?: { name: string; description?: string } }) => void;
+    setMetadata: (metadata: { name: string; description?: string }) => void;
 }
 
 export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     nodes: [],
     edges: [],
+    metadata: { name: "Untitled Workflow" },
     deleteMode: false,
     executionResults: {},
 
     setExecutionResults: (results) => set({ executionResults: results }),
 
-    addNode: (node) =>
-        set((state) => {
-            const next = { nodes: [...state.nodes, node], edges: state.edges };
-            // Check if window is defined (browser environment)
-            if (typeof window !== "undefined") {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-            }
-            return next;
+    setWorkflow: (workflow) =>
+        set({
+            nodes: workflow.nodes || [],
+            edges: workflow.edges || [],
+            executionResults: workflow.executionResults || {},
+            metadata: workflow.metadata || { name: "Untitled Workflow" },
         }),
+
+    setMetadata: (metadata) => set({ metadata }),
+
+    addNode: (node) =>
+        set((state) => ({ nodes: [...state.nodes, node], edges: state.edges })),
 
     setNodes: (nodes) =>
         set((state) => {
             const nextNodes = typeof nodes === 'function' ? nodes(state.nodes) : nodes;
-            const next = { nodes: nextNodes, edges: state.edges };
-            if (typeof window !== "undefined") {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-            }
-            return next;
+            return { nodes: nextNodes, edges: state.edges };
         }),
 
     setEdges: (edges) =>
-        set((state) => {
-            const next = { nodes: state.nodes, edges };
-            if (typeof window !== "undefined") {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-            }
-            return next;
-        }),
+        set((state) => ({ nodes: state.nodes, edges })),
 
     deleteNode: (id: string) =>
-        set((state) => {
-            const next = {
-                nodes: state.nodes.filter((n) => n.id !== id),
-                edges: state.edges.filter(
-                    (e) => e.source !== id && e.target !== id
-                ),
-            };
-            if (typeof window !== "undefined") {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-            }
-            return next;
-        }),
+        set((state) => ({
+            nodes: state.nodes.filter((n) => n.id !== id),
+            edges: state.edges.filter(
+                (e) => e.source !== id && e.target !== id
+            ),
+        })),
 
     deleteEdge: (id: string) =>
-        set((state) => {
-            const next = {
-                nodes: state.nodes,
-                edges: state.edges.filter((e) => e.id !== id),
-            };
-            if (typeof window !== "undefined") {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-            }
-            return next;
-        }),
+        set((state) => ({
+            nodes: state.nodes,
+            edges: state.edges.filter((e) => e.id !== id),
+        })),
 
     toggleDeleteMode: () => set((state) => ({ deleteMode: !state.deleteMode })),
 
     hydrate: () => {
-        if (typeof window === "undefined") return;
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return;
-        try {
-            const parsed = JSON.parse(raw);
-            set(parsed);
-        } catch (e) {
-            console.error("Failed to hydrate workflow", e);
-        }
+        // No-op or fetch logic can go here effectively
+        // Since we are moving to DB-first loading, we can leave this empty or remove calls to it.
     },
 }));

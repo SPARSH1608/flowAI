@@ -29,7 +29,6 @@ const PORT_ICONS: Record<PortDataType, React.ReactNode> = {
     audio: <Mic size={10} />,
 };
 
-// Muted/Dull Colors for Icons & Edges
 const PORT_THEME: Record<PortDataType, { bg: string; border: string; icon: string }> = {
     text: { bg: "bg-[#1c221e]", border: "border-[#2d4a36]", icon: "text-[#6FB98F]" },
     image: { bg: "bg-[#1c2026]", border: "border-[#2d3a4d]", icon: "text-[#6C96C4]" },
@@ -53,14 +52,13 @@ export default function ExternalPort({
         <div
             className="absolute flex items-center justify-center group/port"
             style={{
-                [isInput ? "left" : "right"]: "-42px", // Push even further outside
+                [isInput ? "left" : "right"]: "-42px",
                 top: "50%",
                 transform: "translateY(-50%)",
                 zIndex: 50,
                 ...style,
             }}
         >
-            {/* Invisible Handle for ReactFlow connections */}
             <Handle
                 id={id}
                 type={isInput ? "target" : "source"}
@@ -75,7 +73,6 @@ export default function ExternalPort({
                 }}
             />
 
-            {/* Visible Icon Circle - Smaller and Minimal */}
             <div
                 className={`
             flex items-center justify-center
@@ -95,7 +92,6 @@ export default function ExternalPort({
                 {PORT_ICONS[type]}
             </div>
 
-            {/* Hover Tooltip (Config/Type Name) */}
             <div
                 className={`
             absolute

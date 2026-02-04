@@ -78,14 +78,12 @@ export default function ImageNode({ data, id, selected }: NodeProps) {
 
     return (
         <BaseNode title="Image" status={data.status} selected={selected} id={id} hideDefaultResult>
-            {/* Output Port */}
             <ExternalPort
                 direction="out"
                 type="image"
                 position={Position.Right}
             />
 
-            {/* Image Preview or Placeholder */}
             {config.url ? (
                 <img
                     src={`http://localhost:3002${config.url}`}
@@ -105,14 +103,12 @@ export default function ImageNode({ data, id, selected }: NodeProps) {
                 </div>
             )}
 
-            {/* Error Message */}
             {config.error && (
                 <div className="text-xs text-red-400 mt-1">
                     {config.error}
                 </div>
             )}
 
-            {/* Upload Button */}
             <label className="mt-2 flex items-center gap-2 text-xs cursor-pointer text-blue-400 hover:text-blue-300 transition-colors">
                 <Upload size={14} />
                 <span>{config.url ? "Replace image" : "Upload image"}</span>

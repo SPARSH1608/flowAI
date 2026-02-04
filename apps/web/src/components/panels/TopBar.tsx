@@ -3,12 +3,15 @@
 import { useState } from "react";
 import { serializeWorkflow } from "@/utils/serializeWorkflow";
 import { exportSnapshot } from "@/utils/exportSnapshot";
-import { executeWorkflow } from "@/utils/workflow";
+import { executeWorkflow, createWorkflow, updateWorkflow } from "@/utils/workflow";
 import { podcastTemplate } from "@/templates/podcastTemplate";
 import { useWorkflowStore } from "@/store/workflowStore";
-import { Play, Loader2 } from "lucide-react";
+import { Play, Loader2, Save } from "lucide-react";
+import { useRouter, useParams } from "next/navigation";
 
 export default function TopBar() {
+    const router = useRouter();
+    const params = useParams();
     const setNodes = useWorkflowStore((s) => s.setNodes);
     const setEdges = useWorkflowStore((s) => s.setEdges);
     const setExecutionResults = useWorkflowStore((s) => s.setExecutionResults);
@@ -56,8 +59,40 @@ export default function TopBar() {
         }
     }
 
+    async function handleSave() {
+        try {
+            const workflow = serializeWorkflow();
+
+            if (params?.id && typeof params.id === 'string') {
+                await updateWorkflow(params.id, workflow);
+                console.log("Workflow updated:", params.id);
+                alert("Workflow updated!");
+            } else {
+                // Create new
+                const result = await createWorkflow(workflow);
+                console.log("Workflow saved:", result);
+
+                if (result.id) {
+                    router.push(`/workflows/${result.id}`);
+                    alert("Workflow saved!");
+                }
+            }
+        } catch (error: any) {
+            console.error("Failed to save workflow:", error);
+            alert(`Failed to save: ${error.message}`);
+        }
+    }
+
     return (
         <div className="h-12 bg-neutral-900 border-b border-neutral-800 flex items-center px-4 space-x-2">
+            <button
+                onClick={handleSave}
+                className="flex items-center gap-2 text-sm bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded font-medium transition-colors"
+            >
+                <Save size={16} />
+                Save Workflow
+            </button>
+
             <button
                 onClick={runWorkflow}
                 disabled={isRunning}

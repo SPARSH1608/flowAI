@@ -7,16 +7,17 @@ import { serializeWorkflow } from "@/utils/serializeWorkflow";
 import { executeWorkflow } from "@/utils/workflow";
 import { Play, Download, Eye, RefreshCcw, Upload } from "lucide-react";
 
+import { useParams } from "next/navigation";
+
 export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
+    const params = useParams();
     const config = data.config;
     const executionResult = useWorkflowStore((s) => s.executionResults?.[id]);
     const setExecutionResults = useWorkflowStore((s) => s.setExecutionResults);
 
-    // Check if we have a valid image result
     console.log(`ImageGenerationNode [${id}] render. Result key:`, executionResult);
     let resultImage = executionResult?.['image[]']?.[0] || executionResult?.image;
 
-    // Ensure we have a full URL
     if (resultImage && resultImage.startsWith('/')) {
         resultImage = `http://localhost:3002${resultImage}`;
     }
@@ -24,10 +25,13 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
     const handleRun = async () => {
         console.log("Run/Regenerate clicked for node:", id);
         try {
+            console.log("ImageGenerationNode: workflowId from params:", params?.id);
             const workflow = {
                 ...serializeWorkflow(),
                 targetNodeId: id,
+                workflowId: params?.id as string,
             };
+            console.log("ImageGenerationNode: executing workflow with payload:", workflow);
             const result = await executeWorkflow(workflow);
             if (result.success && result.result) {
                 setExecutionResults(result.result.nodeOutputs);
@@ -54,7 +58,6 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
             window.URL.revokeObjectURL(url);
         } catch (err) {
             console.error("Download failed:", err);
-            // Fallback
             window.open(resultImage, "_blank");
         }
     };
@@ -62,7 +65,6 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
     const renderConfigurationForm = () => (
         <>
             <div className="space-y-3">
-                {/* Prompt Input */}
                 <div>
                     <label className="text-[10px] uppercase text-neutral-500 font-semibold mb-1 block">
                         Prompt
@@ -79,7 +81,6 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
                 </div>
             </div>
 
-            {/* Basic settings */}
             <div className="flex gap-2 text-xs">
                 <input
                     type="number"
@@ -101,7 +102,6 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
                 />
             </div>
 
-            {/* Advanced */}
             <AdvancedToggle>
                 <div className="space-y-2">
                     <input
@@ -142,15 +142,12 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
             id={id}
             hideDefaultResult
         >
-            {/* Inputs */}
             <ExternalPort direction="in" type="text" position={Position.Left} style={{ top: "25%" }} />
             <ExternalPort direction="in" type="image[]" position={Position.Left} style={{ top: "75%" }} />
 
-            {/* Outputs */}
             <ExternalPort direction="out" type="image[]" position={Position.Right} style={{ top: "50%" }} />
 
             {resultImage ? (
-                // Result View
                 <div className="space-y-4">
                     <div className="relative w-full aspect-square min-h-[300px] group rounded-lg overflow-hidden bg-black border border-neutral-800">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -160,9 +157,7 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
                             alt="Generated"
                         />
 
-                        {/* Hover Overlay with 3 Actions */}
                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center gap-3 backdrop-blur-[1px]">
-                            {/* Preview */}
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -174,7 +169,6 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
                                 <Eye size={20} />
                             </button>
 
-                            {/* Save to Uploads */}
                             <button
                                 onClick={async (e) => {
                                     e.stopPropagation();
@@ -205,7 +199,6 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
                                 <Upload size={20} />
                             </button>
 
-                            {/* Download */}
                             <button
                                 onClick={handleDownload}
                                 className="p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md transition-all transform hover:scale-110 border border-white/20"
@@ -214,7 +207,6 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
                                 <Download size={20} />
                             </button>
 
-                            {/* Regenerate */}
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -227,13 +219,11 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
                             </button>
                         </div>
 
-                        {/* Size Badge */}
                         <div className="absolute top-2 left-2 bg-black/50 text-white/80 text-[10px] px-2 py-0.5 rounded-full border border-white/10 pointer-events-none">
                             {config.size?.width || 1024} × {config.size?.height || 1024}
                         </div>
                     </div>
 
-                    {/* Show Configuration only when Selected */}
                     {selected && (
                         <div className="pt-2 border-t border-neutral-800 animate-in slide-in-from-top-2 fade-in duration-200">
                             {renderConfigurationForm()}
@@ -241,7 +231,6 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
                     )}
                 </div>
             ) : (
-                // Default Form View (Always visible if no image)
                 renderConfigurationForm()
             )}
         </BaseNode>
