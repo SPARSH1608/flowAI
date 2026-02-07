@@ -118,9 +118,9 @@
       "dependencies": {
         "@langchain/core": "^1.1.18",
         "@langchain/langgraph": "^1.1.2",
+        "@repo/executor": "*",
       },
       "devDependencies": {
-        "@repo/executor": "*",
         "@repo/typescript-config": "*",
         "@types/bun": "latest",
       },

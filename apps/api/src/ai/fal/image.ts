@@ -1,5 +1,4 @@
 
-
 import { fal } from "../../lib/fal";
 import fs from "fs";
 import path from "path";
@@ -11,27 +10,44 @@ export async function generateImagesFal({
     prompt,
     imageUrls,
     numImages,
+    strength,
 }: {
     model: string;
     prompt: string;
     imageUrls?: string[];
     numImages: number;
+    strength?: number;
 }): Promise<string[]> {
     console.log("Generating images with fal.ai:", {
         model,
         prompt: prompt.substring(0, 100) + "...",
         numImages,
+        strength,
         hasReferenceImages: !!imageUrls?.length,
     });
 
     const input: any = {
         prompt,
         num_images: 1,
-        image_size: "portrait_16_9",
-        guidance_scale: 2.5,
-        num_inference_steps: 50,
         enable_safety_checker: true,
     };
+
+    const isRecraft = model.includes("recraft");
+    const isFluxPro = model.includes("flux-pro");
+
+    if (!isRecraft) {
+        input.image_size = "portrait_16_9";
+        input.guidance_scale = 2.5;
+        input.num_inference_steps = 50;
+    }
+
+    if (imageUrls && imageUrls.length > 0) {
+        input.image_url = imageUrls[0];
+
+        if (!isRecraft && !isFluxPro) {
+            input.strength = strength || 0.75;
+        }
+    }
 
     if (imageUrls && imageUrls.length > 0) {
         console.log("Note: Reference images provided but may not be supported by this model");

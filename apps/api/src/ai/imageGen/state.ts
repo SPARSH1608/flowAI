@@ -2,7 +2,7 @@
 export interface ImageGenState {
     userText?: string;
     inlinePrompt?: string;
-    
+
     referenceImages?: {
         id: string;
         url: string;
@@ -14,6 +14,9 @@ export interface ImageGenState {
         scenario?: string;
         mood?: string;
         brandTone?: string;
+        artStyle?: string;
+        lighting?: string;
+        composition?: string;
         audience?: string;
     };
 

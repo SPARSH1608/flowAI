@@ -21,7 +21,10 @@ export async function callLLM<T>({
     });
 
     try {
-        let output = result.data.output || result.data.text || result.data;
+        // Handle potential different response structures from fal-ai/any-llm
+        // Sometimes it's result.data.output, sometimes result.output directly
+        const data = result.data || result;
+        let output = data.output || data.text || (typeof data === 'string' ? data : JSON.stringify(data));
 
         if (typeof output === 'string') {
             output = output.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
@@ -36,7 +39,7 @@ export async function callLLM<T>({
 
         return output as T;
     } catch (error) {
-        console.error("LLM returned invalid JSON:", result.data);
+        console.error("LLM returned invalid JSON:", result);
         console.error("Parse error:", error);
         throw new Error("LLM returned invalid JSON");
     }

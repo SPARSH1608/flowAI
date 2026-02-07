@@ -16,9 +16,12 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
     const setExecutionResults = useWorkflowStore((s) => s.setExecutionResults);
 
     console.log(`ImageGenerationNode [${id}] render. Result key:`, executionResult);
-    let resultImage = executionResult?.['image[]']?.[0] || executionResult?.image;
+
+    const rawResult = executionResult?.['image[]']?.[0] || executionResult?.image;
+    let resultImage = typeof rawResult === 'string' ? rawResult : rawResult?.url;
 
     if (resultImage && resultImage.startsWith('/')) {
+        // Todo: use env variable for API URL
         resultImage = `http://localhost:3002${resultImage}`;
     }
 
@@ -33,8 +36,19 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
             };
             console.log("ImageGenerationNode: executing workflow with payload:", workflow);
             const result = await executeWorkflow(workflow);
+
             if (result.success && result.result) {
-                setExecutionResults(result.result.nodeOutputs);
+                const outputs = result.result.nodeOutputs || {};
+
+                if (!outputs[id]) {
+                    const errors = result.result.errors || [];
+                    const myError = errors.find((e: any) => e.nodeId === id);
+                    if (myError) {
+                        alert(`❌ Execution Failed for this node!\nError: ${myError.error}`);
+                    }
+                }
+
+                setExecutionResults(outputs);
             }
         } catch (error) {
             console.error("Failed to re-run workflow:", error);
@@ -118,6 +132,50 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
                         defaultValue={config.steps || ""}
                         onChange={(e) => (config.steps = +e.target.value)}
                     />
+
+                    <select
+                        className="w-full bg-neutral-800 border border-neutral-700 rounded p-1 text-xs text-neutral-300"
+                        defaultValue={config.model || "fal-ai/flux-realism"}
+                        onChange={(e) => (config.model = e.target.value)}
+                    >
+                        <option value="fal-ai/flux-realism">Flux Realism (Default)</option>
+                        <option value="fal-ai/flux-pro/v1.1">Flux Pro 1.1 (Premium)</option>
+                        <option value="fal-ai/flux/dev">Flux Dev</option>
+                        <option value="fal-ai/flux/schnell">Flux Schnell (Fast)</option>
+                        <option value="fal-ai/recraft-v3">Recraft V3 (Vector/Art)</option>
+                        <option value="custom">Custom Model</option>
+                    </select>
+
+                    {config.model === "custom" && (
+                        <input
+                            type="text"
+                            className="w-full bg-neutral-800 border border-neutral-700 rounded p-1 text-xs"
+                            placeholder="fal-ai/model-name (e.g. fal-ai/flux-lora)"
+                            defaultValue={config.customModel || ""}
+                            onChange={(e) => (config.customModel = e.target.value)}
+                        />
+                    )}
+
+                    <div className="space-y-1 mt-2">
+                        <div className="flex justify-between text-[10px] text-neutral-400">
+                            <span>Identity Strength</span>
+                            <span>{config.strength || 0.75}</span>
+                        </div>
+                        <input
+                            type="range"
+                            min="0.1"
+                            max="1.0"
+                            step="0.05"
+                            className="w-full h-1 bg-neutral-700 rounded-lg appearance-none cursor-pointer"
+                            defaultValue={config.strength || 0.75}
+                            onChange={(e) => {
+                                const val = parseFloat(e.target.value);
+                                config.strength = val;
+                                // Basic tooltip or visual update
+                                e.target.title = val.toFixed(2);
+                            }}
+                        />
+                    </div>
                 </div>
             </AdvancedToggle>
 

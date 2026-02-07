@@ -10,32 +10,31 @@ export async function compilerNode(
 
     const parts: string[] = [];
 
-    parts.push(
-        `Photorealistic 9:16 portrait of ${state.intent.subject}.`
-    );
+    parts.push(state.intent.subject);
+    if (state.intent.scenario) parts.push(state.intent.scenario);
 
-    if (state.intent.scenario) {
-        parts.push(`Scenario: ${state.intent.scenario}.`);
-    }
-    if (state.intent.mood) {
-        parts.push(`Mood: ${state.intent.mood}.`);
-    }
-    if (state.intent.brandTone) {
-        parts.push(`Brand tone: ${state.intent.brandTone}.`);
-    }
+    if (state.intent.artStyle) parts.push(state.intent.artStyle);
+    if (state.intent.mood) parts.push(`${state.intent.mood} atmosphere`);
+    if (state.intent.lighting) parts.push(state.intent.lighting);
 
-    parts.push(`\nCamera: ${state.visualPlan.camera}.`);
-    parts.push(`Framing: ${state.visualPlan.framing}.`);
-    parts.push(`Lighting: ${state.visualPlan.lighting}.`);
-    parts.push(`Environment: ${state.visualPlan.environment}.`);
-    if (state.constraints && state.constraints.length > 0) {
-        parts.push(`\nRealism requirements:`);
-        state.constraints.forEach((constraint) => {
-            parts.push(`- ${constraint}`);
-        });
-    }
+    parts.push(state.visualPlan.camera);
+    parts.push(state.visualPlan.framing);
+    parts.push(state.visualPlan.lighting);
+    parts.push(state.visualPlan.environment);
 
-    const finalPrompt = parts.join("\n").trim();
+    if (state.intent.composition) parts.push(state.intent.composition);
+
+    const boosters = [
+        "highly detailed",
+        "sharp focus",
+        "8k resolution",
+        "cinematic lighting",
+        "commercial photography",
+        "masterpiece"
+    ];
+    parts.push(...boosters);
+
+    const finalPrompt = parts.filter(Boolean).join(", ");
 
     return { finalPrompt };
 }
