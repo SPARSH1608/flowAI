@@ -18,6 +18,9 @@ export interface ImageGenState {
         lighting?: string;
         composition?: string;
         audience?: string;
+        headline?: string;     // Text to be rendered (e.g., "Fresh")
+        primaryText?: string;  // Body copy or tagline
+        designElements?: string[]; // e.g. ["minimalist layout", "bold typography"]
     };
 
     visualPlan?: {

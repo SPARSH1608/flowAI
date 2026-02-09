@@ -12,6 +12,7 @@ import { useParams } from "next/navigation";
 export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
     const params = useParams();
     const config = data.config;
+    const setNodes = useWorkflowStore((s) => s.setNodes);
     const executionResult = useWorkflowStore((s) => s.executionResults?.[id]);
     const setExecutionResults = useWorkflowStore((s) => s.setExecutionResults);
 
@@ -24,6 +25,49 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
         // Todo: use env variable for API URL
         resultImage = `http://localhost:3002${resultImage}`;
     }
+
+    const updateConfig = (key: string, value: any) => {
+        setNodes((nodes: any[]) =>
+            nodes.map((node) => {
+                if (node.id === id) {
+                    return {
+                        ...node,
+                        data: {
+                            ...node.data,
+                            config: {
+                                ...node.data.config,
+                                [key]: value,
+                            },
+                        },
+                    };
+                }
+                return node;
+            })
+        );
+    };
+
+    const updateSize = (key: "width" | "height", value: number) => {
+        setNodes((nodes: any[]) =>
+            nodes.map((node) => {
+                if (node.id === id) {
+                    return {
+                        ...node,
+                        data: {
+                            ...node.data,
+                            config: {
+                                ...node.data.config,
+                                size: {
+                                    ...node.data.config?.size,
+                                    [key]: value,
+                                },
+                            },
+                        },
+                    };
+                }
+                return node;
+            })
+        );
+    };
 
     const handleRun = async () => {
         console.log("Run/Regenerate clicked for node:", id);
@@ -87,10 +131,7 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
                         className="w-full h-20 bg-neutral-900/50 border border-neutral-800 rounded-lg p-2 text-neutral-200 text-xs focus:outline-none focus:border-neutral-700 resize-none placeholder:text-neutral-600"
                         placeholder="Describe image..."
                         defaultValue={config?.prompt}
-                        onChange={(e) => {
-                            config.prompt = e.target.value;
-                            data.status = "configured";
-                        }}
+                        onBlur={(e) => updateConfig("prompt", e.target.value)}
                     />
                 </div>
             </div>
@@ -101,18 +142,14 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
                     className="w-1/2 bg-neutral-800 border border-neutral-700 rounded p-1"
                     placeholder="Width"
                     defaultValue={config.size?.width || ""}
-                    onChange={(e) => {
-                        config.size = { ...config.size, width: +e.target.value };
-                    }}
+                    onBlur={(e) => updateSize("width", +e.target.value)}
                 />
                 <input
                     type="number"
                     className="w-1/2 bg-neutral-800 border border-neutral-700 rounded p-1"
                     placeholder="Height"
                     defaultValue={config.size?.height || ""}
-                    onChange={(e) => {
-                        config.size = { ...config.size, height: +e.target.value };
-                    }}
+                    onBlur={(e) => updateSize("height", +e.target.value)}
                 />
             </div>
 
@@ -123,20 +160,20 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
                         className="w-full bg-neutral-800 border border-neutral-700 rounded p-1 text-xs"
                         placeholder="CFG Scale"
                         defaultValue={config.cfgScale || ""}
-                        onChange={(e) => (config.cfgScale = +e.target.value)}
+                        onBlur={(e) => updateConfig("cfgScale", +e.target.value)}
                     />
                     <input
                         type="number"
                         className="w-full bg-neutral-800 border border-neutral-700 rounded p-1 text-xs"
                         placeholder="Steps"
                         defaultValue={config.steps || ""}
-                        onChange={(e) => (config.steps = +e.target.value)}
+                        onBlur={(e) => updateConfig("steps", +e.target.value)}
                     />
 
                     <select
                         className="w-full bg-neutral-800 border border-neutral-700 rounded p-1 text-xs text-neutral-300"
                         defaultValue={config.model || "fal-ai/flux-realism"}
-                        onChange={(e) => (config.model = e.target.value)}
+                        onChange={(e) => updateConfig("model", e.target.value)}
                     >
                         <option value="fal-ai/flux-realism">Flux Realism (Default)</option>
                         <option value="fal-ai/flux-pro/v1.1">Flux Pro 1.1 (Premium)</option>
@@ -152,7 +189,7 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
                             className="w-full bg-neutral-800 border border-neutral-700 rounded p-1 text-xs"
                             placeholder="fal-ai/model-name (e.g. fal-ai/flux-lora)"
                             defaultValue={config.customModel || ""}
-                            onChange={(e) => (config.customModel = e.target.value)}
+                            onBlur={(e) => updateConfig("customModel", e.target.value)}
                         />
                     )}
 
@@ -170,12 +207,21 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
                             defaultValue={config.strength || 0.75}
                             onChange={(e) => {
                                 const val = parseFloat(e.target.value);
-                                config.strength = val;
-                                // Basic tooltip or visual update
+                                updateConfig("strength", val);
                                 e.target.title = val.toFixed(2);
                             }}
                         />
+
                     </div>
+
+                    {executionResult?.debugInfo && (
+                        <div className="mt-4 pt-4 border-t border-neutral-800">
+                            <h3 className="text-[10px] uppercase text-neutral-500 font-semibold mb-2">Debug Info</h3>
+                            <div className="bg-black/50 rounded p-2 text-[10px] font-mono text-neutral-400 overflow-x-auto whitespace-pre-wrap max-h-40 overflow-y-auto">
+                                {JSON.stringify(executionResult.debugInfo, null, 2)}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </AdvancedToggle>
 

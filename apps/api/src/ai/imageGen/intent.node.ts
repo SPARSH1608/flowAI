@@ -40,6 +40,9 @@ export async function intentNode(
             lighting?: string;
             composition?: string;
             audience?: string;
+            headline?: string;
+            primaryText?: string;
+            designElements?: string[];
         }>({
             model: "fal-ai/any-llm",
             system: `You are a senior creative director.
@@ -64,7 +67,10 @@ Return JSON with these fields:
 - artStyle: visual style (e.g., photorealistic, cinematic, 3d render, minimal)
 - lighting: lighting description (e.g., soft studio lighting, golden hour, neon)
 - composition: camera angle or framing (e.g., wide angle, macro, bokeh)
-- audience: target viewer (optional)`,
+- audience: target viewer (optional)
+- headline: EXACT text to be written on the image (if mentioned, e.g. "Write 'Sale'")
+- primaryText: additional text/tagline (optional)
+- designElements: list of design keywords if "ad" or "poster" layout is implied (e.g. ["bold typography", "minimalist layout", "floating elements"])`,
         });
 
         return { intent };

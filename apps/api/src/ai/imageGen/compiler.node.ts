@@ -24,16 +24,32 @@ export async function compilerNode(
 
     if (state.intent.composition) parts.push(state.intent.composition);
 
+    if (state.intent.headline) {
+        parts.push(`text "${state.intent.headline}" in bold modern typography`);
+    }
+    if (state.intent.primaryText) {
+        parts.push(`text "${state.intent.primaryText}" in clean sans-serif font`);
+    }
+
+    if (state.intent.designElements && state.intent.designElements.length > 0) {
+        parts.push(...state.intent.designElements);
+    }
+
     const boosters = [
         "highly detailed",
         "sharp focus",
         "8k resolution",
         "cinematic lighting",
         "commercial photography",
-        "masterpiece"
+        "masterpiece",
+        "award-winning",
+        "professional",
+        "studio lighting"
     ];
     parts.push(...boosters);
 
+    // Join with commas for a tag-like structure which often works better for details, 
+    // but keep the first part (subject) distinct.
     const finalPrompt = parts.filter(Boolean).join(", ");
 
     return { finalPrompt };

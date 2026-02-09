@@ -7,6 +7,8 @@ import { NodeExecutor } from "./types.js";
 export const ImageGenerationExecutor: NodeExecutor = {
     async execute(nodeId, config, inputs, state) {
         console.log(`[ImageGenerationExecutor] Starting execution for node ${nodeId}`);
+        console.log(`[ImageGenerationExecutor] RAW CONFIG:`, JSON.stringify(config, null, 2));
+        console.log(`[ImageGenerationExecutor] RAW INPUTS:`, JSON.stringify(inputs, null, 2));
 
         const userText = inputs.text;
         const inlinePrompt = config.prompt || config.userPrompt;
@@ -72,6 +74,11 @@ export const ImageGenerationExecutor: NodeExecutor = {
                     url,
                     source: "generated",
                 })),
+                debugInfo: {
+                    receivedInputs: inputs,
+                    usedConfig: config,
+                    finalPrompt: finalState.finalPrompt
+                }
             },
         };
 
