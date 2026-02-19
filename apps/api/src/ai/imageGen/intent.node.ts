@@ -1,31 +1,33 @@
 import type { ImageGenState } from "./state";
 import { callLLM } from "../llm";
-import { describeImage } from "../vision";
+import { analyzeReferenceImage } from "../vision";
 
 export async function intentNode(
     state: ImageGenState
 ): Promise<Partial<ImageGenState>> {
-    let visualDescription = "";
+    let referenceImageAnalysis = state.referenceImageAnalysis;
 
-    if (state.referenceImages && state.referenceImages.length > 0 && state.referenceImages[0]?.url) {
-        visualDescription = await describeImage(state.referenceImages[0].url);
+    if (!referenceImageAnalysis && state.referenceImages && state.referenceImages.length > 0 && state.referenceImages[0]?.url) {
+        referenceImageAnalysis = await analyzeReferenceImage(state.referenceImages[0].url);
     }
 
-    const text = [
+    const textParts = [
         state.userText,
         state.inlinePrompt,
-        visualDescription ? `Reference Image Description: ${visualDescription}` : ""
-    ]
-        .filter(Boolean)
-        .join("\n");
+        referenceImageAnalysis ? `Reference Image Analysis: ${JSON.stringify(referenceImageAnalysis)}` : ""
+    ].filter(Boolean).join("\n");
 
-    if (!text.trim()) {
+    if (!textParts.trim()) {
         return {
+            referenceImageAnalysis,
             intent: {
-                subject: "person portrait",
-                scenario: "professional portrait",
-                mood: "neutral professional",
+                subject: "premium product",
+                scenario: "modern advertisement with clean layout",
+                mood: "bold and professional",
                 brandTone: "premium",
+                adType: "product-ad",
+                adFormat: "social-media",
+                designElements: ["bold typography", "minimalist layout", "vibrant colors"],
             },
         };
     }
@@ -42,46 +44,60 @@ export async function intentNode(
             audience?: string;
             headline?: string;
             primaryText?: string;
+            ctaText?: string;
             designElements?: string[];
+            adType: "product-ad" | "lifestyle-ad" | "person-centric-ad";
+            adFormat?: string;
         }>({
             model: "fal-ai/any-llm",
-            system: `You are a senior creative director.
-Extract intent from the input.
+            system: `You are a senior creative director at a top advertising agency.
+Your job is to extract the AD INTENT from user input. You are designing ADVERTISEMENTS, not photographs.
 
-Rules:
-- Do NOT write a prompt
-- Do NOT add creativity
-- Return ONLY valid JSON
-- Be specific and concrete
-- Extract what the user wants, not how to create it
-- If the user asks for an "Ad" or "Advertisement", ensure the scenario describes a commercial product shot or lifestyle ad setting.
-- If the user provides an image or mentions "him/her/them", explicitly refer to "The person in the provided reference image" in the subject.`,
+CRITICAL RULES:
+- Think like an ad designer, NOT a photographer
+- Every output should describe an ADVERTISEMENT with design elements, text, and layout — not just a pretty image
+- Auto-detect the ad type based on the input:
+  * "product-ad" — if the input is about a product, brand, or item
+  * "lifestyle-ad" — if the input implies a lifestyle, activity, or aspirational scene with a product
+  * "person-centric-ad" — if the input focuses on a person (influencer, model, testimonial)
+- If user provides a reference image of a person, set adType to "person-centric-ad" and reference "the person from the reference image" in the subject
+- If user provides a reference image of a product, set adType to "product-ad" and describe the product as seen in the reference
+- ALWAYS include designElements that make it look like a REAL AD (typography, layout cues, visual effects)
+- If no headline is explicitly given, suggest a short catchy headline that fits the product/brand
+- If no CTA is given, suggest one (like "Shop Now", "Learn More", "Try It Today")
+- Return ONLY valid JSON`,
             user: `Input:
-${text}
+${textParts}
 
 Return JSON with these fields:
-- subject: what/who is being photographed
-- scenario: the context or setting
-- mood: emotional tone or feeling
-- brandTone: professional style (e.g., premium, casual, corporate)
-- artStyle: visual style (e.g., photorealistic, cinematic, 3d render, minimal)
-- lighting: lighting description (e.g., soft studio lighting, golden hour, neon)
-- composition: camera angle or framing (e.g., wide angle, macro, bokeh)
-- audience: target viewer (optional)
-- headline: EXACT text to be written on the image (if mentioned, e.g. "Write 'Sale'")
-- primaryText: additional text/tagline (optional)
-- designElements: list of design keywords if "ad" or "poster" layout is implied (e.g. ["bold typography", "minimalist layout", "floating elements"])`,
+- subject: the main subject of the ad (product, person, or both)
+- scenario: the ad setting/context (e.g., "Instagram story ad for summer collection", "billboard for energy drink launch")
+- mood: emotional tone (e.g., "bold and energetic", "luxurious and minimal", "warm and inviting")
+- brandTone: brand personality (e.g., "premium", "youthful", "corporate", "playful")
+- artStyle: visual style (e.g., "modern flat design", "photorealistic with graphic overlays", "neon cyberpunk")
+- lighting: lighting for the scene (e.g., "dramatic studio lighting with colored gels", "bright and airy natural light")
+- composition: layout/composition (e.g., "product hero center with text overlays", "split layout: image left, text right")
+- audience: target audience (e.g., "Gen Z social media users", "corporate professionals")
+- headline: main ad headline text (auto-generate one if not provided by user)
+- primaryText: tagline or subtext
+- ctaText: call-to-action text (e.g., "Shop Now", "Learn More")
+- designElements: list of design keywords (e.g., ["bold sans-serif typography", "gradient background", "floating product shadow", "geometric accents", "neon glow effect"])
+- adType: one of "product-ad", "lifestyle-ad", or "person-centric-ad"
+- adFormat: the format (e.g., "social-media-post", "instagram-story", "banner", "poster", "billboard")`,
         });
 
-        return { intent };
+        return { intent, referenceImageAnalysis };
     } catch (error) {
         console.error("Intent extraction failed:", error);
         return {
+            referenceImageAnalysis,
             intent: {
-                subject: text,
-                scenario: "artistic composition",
-                mood: "dynamic",
-                brandTone: "professional",
+                subject: textParts,
+                scenario: "modern advertisement",
+                mood: "bold and professional",
+                brandTone: "premium",
+                adType: referenceImageAnalysis?.type === "person" ? "person-centric-ad" : "product-ad",
+                designElements: ["bold typography", "clean layout", "vibrant colors"],
             },
         };
     }

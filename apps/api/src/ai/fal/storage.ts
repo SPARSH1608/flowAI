@@ -5,37 +5,39 @@ import path from "path";
 
 export async function uploadToFal(imageUrl: string): Promise<string> {
     try {
-        // If it's already a remote URL (and not localhost), stick with it
         if (imageUrl.startsWith("http") && !imageUrl.includes("localhost")) {
             return imageUrl;
         }
 
         let filePath = imageUrl;
 
-        // Strip query params if any
-        if (filePath.includes("?")) {
-            filePath = filePath.split("?")[0];
+        if (filePath.startsWith("http://localhost") || filePath.startsWith("https://localhost")) {
+            try {
+                const urlObj = new URL(filePath);
+                filePath = urlObj.pathname;
+            } catch (e) {
+            }
         }
 
-        // If it comes from our API as /uploads/..., resolve it relative to CWD
-        // We assume CWD is the package root where uploads/ folder exists or is served from
+        if (filePath.includes("?")) {
+            const parts = filePath.split("?");
+            filePath = parts[0] as string;
+        }
+
         if (filePath.startsWith("/uploads/")) {
-            filePath = `.${filePath}`; // ./uploads/...
+            filePath = `.${filePath}`;
         } else if (filePath.startsWith("uploads/")) {
             filePath = `./${filePath}`;
         }
-
-        // Resolve to absolute path
         const absolutePath = path.resolve(process.cwd(), filePath);
 
         console.log(`[uploadToFal] Resolving local file: ${imageUrl} -> ${absolutePath}`);
 
-        // Check if file exists
         try {
             await fs.access(absolutePath);
         } catch {
-            console.warn(`[uploadToFal] File not found at ${absolutePath}. Keeping original URL.`);
-            return imageUrl;
+            console.error(`[uploadToFal] File not found at ${absolutePath}`);
+            throw new Error(`Reference image file not found: ${path.basename(filePath)}`);
         }
 
         const fileBuffer = await fs.readFile(absolutePath);

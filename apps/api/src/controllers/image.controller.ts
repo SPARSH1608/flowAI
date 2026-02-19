@@ -46,17 +46,8 @@ export async function saveGeneratedImage(req: Request, res: Response) {
             return res.status(400).json({ error: "No imageUrl provided" });
         }
 
-        // Clean up URL to get relative path
-        // Handles both full URL and relative path
         const relativePath = imageUrl.replace(/^https?:\/\/[^\/]+/, "");
 
-        // Construct source path (assuming app.ts serves 'uploads' at root or similar)
-        // If relativePath is '/uploads/generated/foo.png', and app root is where we are running.
-        // We need to resolve where this file actually exists on disk.
-        // Based on app.ts: app.use("/uploads", express.static("uploads"));
-        // So '/uploads/foo.png' maps to './uploads/foo.png' relative to CWD.
-
-        // Remove leading slash for path.join
         const cleanPath = relativePath.startsWith('/') ? relativePath.slice(1) : relativePath;
         const sourcePath = path.resolve(process.cwd(), cleanPath);
 
@@ -68,22 +59,19 @@ export async function saveGeneratedImage(req: Request, res: Response) {
         const targetDir = path.join(process.cwd(), "uploads", "images");
         const targetPath = path.join(targetDir, filename);
 
-        // Ensure target directory exists
         if (!fs.existsSync(targetDir)) {
             fs.mkdirSync(targetDir, { recursive: true });
         }
 
-        // Copy file
         await fs.promises.copyFile(sourcePath, targetPath);
 
-        // Get file stats for size
         const stats = await fs.promises.stat(targetPath);
 
         // Create DB record
         const image = await prisma.image.create({
             data: {
                 filename: filename,
-                mimetype: "image/png", // Assuming PNG for now, or infer from extension
+                mimetype: "image/png",
                 size: stats.size,
                 path: targetPath,
                 url: `/uploads/images/${filename}`,

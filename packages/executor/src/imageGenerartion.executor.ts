@@ -66,6 +66,7 @@ export const ImageGenerationExecutor: NodeExecutor = {
             imageUrls: referenceImages.map((r) => r.url),
             numImages,
             strength: config.strength,
+            adType: finalState.intent?.adType,
         });
 
         const output = {

@@ -1,4 +1,35 @@
 
+export type AdType = "product-ad" | "lifestyle-ad" | "person-centric-ad";
+
+export interface ReferenceImageAnalysis {
+    type: "product" | "person" | "scene";
+    description: string;
+    brandDetails?: {
+        brandName?: string;
+        colors?: string[];
+        logoDescription?: string;
+        packagingStyle?: string;
+    };
+    personDetails?: {
+        appearance: string;
+        clothing: string;
+        expression: string;
+        distinctiveFeatures: string;
+    };
+}
+
+export interface AdCreativePlan {
+    layout: string;
+    headline: string;
+    tagline?: string;
+    ctaText?: string;
+    colorPalette: string[];
+    typographyStyle: string;
+    visualHierarchy: string;
+    heroElement: string;
+    textPlacement: string;
+}
+
 export interface ImageGenState {
     userText?: string;
     inlinePrompt?: string;
@@ -9,6 +40,8 @@ export interface ImageGenState {
         purpose?: string;
     }[];
 
+    referenceImageAnalysis?: ReferenceImageAnalysis;
+
     intent?: {
         subject: string;
         scenario?: string;
@@ -18,9 +51,12 @@ export interface ImageGenState {
         lighting?: string;
         composition?: string;
         audience?: string;
-        headline?: string;     // Text to be rendered (e.g., "Fresh")
-        primaryText?: string;  // Body copy or tagline
-        designElements?: string[]; // e.g. ["minimalist layout", "bold typography"]
+        headline?: string;
+        primaryText?: string;
+        ctaText?: string;
+        designElements?: string[];
+        adType: AdType;
+        adFormat?: string;
     };
 
     visualPlan?: {
@@ -30,6 +66,8 @@ export interface ImageGenState {
         environment: string;
         realismLevel: "strict" | "balanced";
     };
+
+    adCreativePlan?: AdCreativePlan;
 
     constraints?: string[];
 
