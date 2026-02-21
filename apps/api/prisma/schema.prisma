@@ -13,6 +13,16 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id        String     @id @default(uuid())
+  email     String     @unique
+  password  String
+  name      String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  workflows Workflow[]
+}
+
 model Workflow {
   id          String      @id @default(uuid())
   name        String
@@ -22,7 +32,11 @@ model Workflow {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   viewport    Json
+  userId      String?
+  user        User?       @relation(fields: [userId], references: [id])
   executions  Execution[]
+
+  @@index([userId])
 }
 enum ExecutionStatus {
   PENDING

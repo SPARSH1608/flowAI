@@ -84,7 +84,7 @@ export default function MediaLibrary({ onImageSelect }: MediaLibraryProps) {
                             className="group relative aspect-square cursor-pointer rounded-lg overflow-hidden border border-neutral-800 hover:border-blue-500 transition-all hover:scale-105"
                         >
                             <img
-                                src={`http://localhost:3002${image.url}`}
+                                src={`${process.env.NEXT_PUBLIC_API_URL}${image.url}`}
                                 alt={image.filename}
                                 className="w-full h-full object-cover"
                             />

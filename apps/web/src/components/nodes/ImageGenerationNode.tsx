@@ -23,8 +23,7 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
     let resultImage = typeof rawResult === 'string' ? rawResult : rawResult?.url;
 
     if (resultImage && resultImage.startsWith('/')) {
-        // Todo: use env variable for API URL
-        resultImage = `http://localhost:3002${resultImage}`;
+        resultImage = `${process.env.NEXT_PUBLIC_API_URL}${resultImage}`;
     }
 
     const updateNodeData = useWorkflowStore((s) => s.updateNodeData);
@@ -162,7 +161,7 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
                                     e.stopPropagation();
                                     if (!resultImage) return;
                                     try {
-                                        const res = await fetch("http://localhost:3002/images/save-generated", {
+                                        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/images/save-generated`, {
                                             method: "POST",
                                             headers: { "Content-Type": "application/json" },
                                             body: JSON.stringify({

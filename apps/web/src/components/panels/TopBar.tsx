@@ -9,10 +9,13 @@ import { useWorkflowStore } from "@/store/workflowStore";
 import { Play, Loader2, Save, Download, Image as ImageIcon, Sparkles, ChevronLeft } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
+import UserMenu from "../auth/UserMenu";
 
 export default function TopBar() {
     const router = useRouter();
     const params = useParams();
+    const { user, logout, token } = useAuth();
     const setNodes = useWorkflowStore((s) => s.setNodes);
     const setEdges = useWorkflowStore((s) => s.setEdges);
     const setExecutionResults = useWorkflowStore((s) => s.setExecutionResults);
@@ -38,6 +41,7 @@ export default function TopBar() {
     }
 
     async function runWorkflow() {
+        if (!token) return;
         setIsRunning(true);
         try {
             const workflow = serializeWorkflow() as any;
@@ -46,18 +50,20 @@ export default function TopBar() {
             }
             console.log("Running workflow:", workflow);
 
-            const result = await executeWorkflow(workflow);
+            const result = await executeWorkflow(workflow, (partialResults) => {
+                setExecutionResults(partialResults);
+            }, (nodeId) => {
+                console.log(`Node ${nodeId} started`);
+            }, token);
+
             console.log("Workflow execution result:", result);
 
             if (result.success && result.result) {
-                console.log("TopBar received outputs:", result.result.nodeOutputs);
                 setExecutionResults(result.result.nodeOutputs);
                 if ((result as any).execution) {
                     useWorkflowStore.getState().addExecution((result as any).execution);
                 }
             }
-
-            alert("Workflow executed successfully! Check console for results.");
         } catch (error: any) {
             console.error("Workflow execution failed:", error);
             alert(`Workflow execution failed: ${error.message}`);
@@ -67,18 +73,15 @@ export default function TopBar() {
     }
 
     async function handleSave() {
+        if (!token) return;
         try {
             const workflow = serializeWorkflow();
 
             if (params?.id && typeof params.id === 'string') {
-                await updateWorkflow(params.id, workflow);
-                console.log("Workflow updated:", params.id);
+                await updateWorkflow(params.id, workflow, token);
                 alert("Workflow updated!");
             } else {
-                // Create new
-                const result = await createWorkflow(workflow);
-                console.log("Workflow saved:", result);
-
+                const result = await createWorkflow(workflow, token);
                 if (result.id) {
                     router.push(`/workflows/${result.id}`);
                     alert("Workflow saved!");
@@ -92,9 +95,8 @@ export default function TopBar() {
 
     return (
         <div className="h-14 flex-none bg-[#0E0E14] border-b border-white/5 flex items-center justify-between px-6 z-50">
-            {/* Left Box: Nav & Title */}
             <div className="flex items-center gap-4 w-1/3">
-                <Link href="/workflows" className="text-neutral-500 hover:text-white transition-colors">
+                <Link href="/" className="text-neutral-500 hover:text-white transition-colors">
                     <ChevronLeft size={18} />
                 </Link>
                 <div className="h-4 w-px bg-white/10" />
@@ -103,12 +105,11 @@ export default function TopBar() {
                         <Sparkles size={12} className="text-indigo-400" />
                     </div>
                     <span className="text-sm font-semibold text-neutral-200 tracking-wide group-hover:text-white transition-colors">
-                        Untitled Workflow
+                        {useWorkflowStore.getState().metadata?.name || "Untitled Workflow"}
                     </span>
                 </div>
             </div>
 
-            {/* Center Box: Generic Actions */}
             <div className="flex items-center justify-center gap-2 w-1/3">
                 <button
                     onClick={loadTemplate}
@@ -131,7 +132,6 @@ export default function TopBar() {
                 </button>
             </div>
 
-            {/* Right Box: Primary Actions */}
             <div className="flex items-center justify-end gap-3 w-1/3">
                 <button
                     onClick={handleSave}
@@ -158,6 +158,10 @@ export default function TopBar() {
                         </>
                     )}
                 </button>
+
+                <div className="h-4 w-px bg-white/10 mx-1" />
+
+                <UserMenu />
             </div>
         </div>
     );

@@ -86,7 +86,7 @@ export default function ImageNode({ data, id, selected }: NodeProps) {
 
             {config.url ? (
                 <img
-                    src={`http://localhost:3002${config.url}`}
+                    src={`${process.env.NEXT_PUBLIC_API_URL}${config.url}`}
                     alt="Uploaded"
                     className="w-full h-32 object-cover rounded-md border border-neutral-700"
                 />

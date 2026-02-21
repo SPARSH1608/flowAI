@@ -32,3 +32,8 @@ yarn-error.log*
 
 # vercel
 .vercel
+.env
+.env.*
+node_modules
+.next
+uploads

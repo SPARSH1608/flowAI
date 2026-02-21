@@ -3,7 +3,7 @@ export async function uploadImage(file: File, purpose: string) {
     formData.append("image", file);
     formData.append("purpose", purpose);
 
-    const res = await fetch("http://localhost:3002/images", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/images`, {
         method: "POST",
         body: formData,
     });
@@ -16,7 +16,7 @@ export async function uploadImage(file: File, purpose: string) {
 }
 
 export async function fetchImages() {
-    const res = await fetch("http://localhost:3002/images");
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/images`);
 
     if (!res.ok) {
         throw new Error("Failed to fetch images");

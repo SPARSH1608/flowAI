@@ -7,17 +7,25 @@ import WorkflowCanvas from "@/components/canvas/WorkflowCanvas";
 import FloatingSidebar from "@/components/panels/FloatingSidebar";
 import TopBar from "@/components/panels/TopBar";
 import RightInspector from "@/components/panels/RightInspector";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { fetchWorkflow } from "@/utils/workflow";
+import { useAuth } from "@/context/AuthContext";
 
 export default function WorkflowPage() {
     const setWorkflow = useWorkflowStore((s) => s.setWorkflow);
     const params = useParams();
+    const { token, loading } = useAuth();
+    const router = useRouter();
 
     useEffect(() => {
+        if (loading) return;
+        if (!token) {
+            router.push("/auth");
+            return;
+        }
         if (!params.id) return;
 
-        fetchWorkflow(params.id as string)
+        fetchWorkflow(params.id as string, token)
             .then((data) => {
                 const nodes = data.definition?.nodes || [];
                 const edges = data.definition?.edges || [];

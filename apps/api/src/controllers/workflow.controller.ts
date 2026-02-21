@@ -24,7 +24,8 @@ export async function createWorkflow(
         });
     }
 
-    const workflow = await saveWorkflow(parsed.data);
+    const userId = (req as any).userId;
+    const workflow = await saveWorkflow(parsed.data, userId);
 
     res.json({
         id: workflow.id,
@@ -46,8 +47,9 @@ export async function updateWorkflowController(
         });
     }
 
+    const userId = (req as any).userId;
     try {
-        const workflow = await updateWorkflow(id as string, parsed.data);
+        const workflow = await updateWorkflow(id as string, parsed.data, userId);
         res.json({
             id: workflow.id,
             message: "Workflow updated",
@@ -61,8 +63,10 @@ export async function fetchWorkflow(
     req: Request,
     res: Response
 ) {
+    const userId = (req as any).userId;
     const workflow = await getWorkflowById(
-        req.params.id as string
+        req.params.id as string,
+        userId
     );
 
     if (!workflow) {
@@ -75,10 +79,11 @@ export async function fetchWorkflow(
 }
 
 export async function fetchWorkflows(
-    _req: Request,
+    req: Request,
     res: Response
 ) {
-    const workflows = await getWorkflows();
+    const userId = (req as any).userId;
+    const workflows = await getWorkflows(userId);
     res.json(workflows);
 }
 
@@ -87,19 +92,15 @@ export async function executeWorkflowController(
     res: Response
 ) {
     try {
-        console.log("Executing workflow with in controller", req.body);
         const workflowDefinition = req.body;
-        console.log("Executing workflow with in controller", workflowDefinition);
         const nodes = workflowDefinition.nodes || workflowDefinition.canvas?.nodes;
         const edges = workflowDefinition.edges || workflowDefinition.canvas?.edges;
-        console.log("Executing workflow with", nodes, edges);
+
         if (!nodes || !Array.isArray(nodes)) {
             return res.status(400).json({
                 error: "Invalid workflow definition - missing nodes array",
             });
         }
-
-        console.log("Executing workflow with", nodes.length, "nodes");
 
         // Set headers for streaming
         res.setHeader('Content-Type', 'application/x-ndjson');
@@ -119,25 +120,18 @@ export async function executeWorkflowController(
             executionId = execution.id;
         }
 
-        // Pass the workflow in the format the executor expects
         const result = await executeWorkflow({
             nodes,
             edges: edges || [],
             targetNodeId: workflowDefinition.targetNodeId,
             executionResults: workflowDefinition.executionResults,
         }, (nodeId, output) => {
-            console.log(`[executeWorkflowController] Node ${nodeId} complete, streaming...`);
-            // Stream the individual node result
             res.write(JSON.stringify({ type: 'node_complete', nodeId, output }) + '\n');
-            // If response has a flush method (common in compression middleware), use it
             if ((res as any).flush) (res as any).flush();
         }, (nodeId) => {
-            console.log(`[executeWorkflowController] Node ${nodeId} started, streaming...`);
             res.write(JSON.stringify({ type: 'node_start', nodeId }) + '\n');
             if ((res as any).flush) (res as any).flush();
         });
-
-        console.log("[executeWorkflowController] Workflow complete, sending final result");
 
         let finalExecution: any;
         if (executionId) {

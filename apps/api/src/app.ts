@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import workflowRoutes from "./routes/workflow.routes";
 import imageRoutes from "./routes/image.routes";
+import authRoutes from "./routes/auth.routes";
+import { authenticate } from "./middlewares/auth.middleware";
 
 const app = express();
 
@@ -13,7 +15,8 @@ app.get("/health", (_, res) => {
 });
 
 
-app.use("/workflows", workflowRoutes);
+app.use("/auth", authRoutes);
+app.use("/workflows", authenticate, workflowRoutes);
 app.use("/images", imageRoutes);
 app.use("/uploads", express.static("uploads"));
 

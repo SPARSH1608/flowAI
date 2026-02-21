@@ -2,11 +2,32 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, ArrowRight, MoreVertical, Edit, Trash2 } from "lucide-react";
+import { Plus, ArrowRight, MoreVertical, Edit, Trash2, Loader2 } from "lucide-react";
 import { createWorkflow, updateWorkflow, deleteWorkflow } from "@/utils/workflow";
 import WorkflowModal from "@/components/modals/WorkflowModal";
+import LandingPage from "@/components/landing/LandingPage";
+import { useAuth } from "@/context/AuthContext";
+import UserMenu from "@/components/auth/UserMenu";
 
-export default function DashboardPage() {
+export default function Page() {
+  const { user, token, loading: authLoading } = useAuth();
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#0A0A0C] flex items-center justify-center">
+        <Loader2 className="text-indigo-500 animate-spin" size={32} />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LandingPage />;
+  }
+
+  return <DashboardPage token={token!} />;
+}
+
+function DashboardPage({ token }: { token: string }) {
   const router = useRouter();
   const [workflows, setWorkflows] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -17,9 +38,19 @@ export default function DashboardPage() {
   }, []);
 
   function fetchWorkflows() {
-    fetch("http://localhost:3002/workflows")
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/workflows`, {
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    })
       .then((res) => res.json())
-      .then((data) => setWorkflows(data))
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setWorkflows(data);
+        } else {
+          console.error("Expected array for workflows, got:", data);
+        }
+      })
       .catch((err) => console.error(err));
   }
 
@@ -46,7 +77,9 @@ export default function DashboardPage() {
     if (!editingWorkflow) return;
 
     try {
-      const fullWorkflowRes = await fetch(`http://localhost:3002/workflows/${editingWorkflow.id}`);
+      const fullWorkflowRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/workflows/${editingWorkflow.id}`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
       const fullWorkflow = await fullWorkflowRes.json();
 
       fullWorkflow.metadata.name = data.name;
@@ -77,20 +110,24 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-black text-white p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-10">
-          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-violet-400">
+        <div className="flex justify-between items-center mb-12">
+          <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-violet-400 tracking-tight">
             Workflows
           </h1>
-          <button
-            onClick={() => {
-              setEditingWorkflow(null);
-              setIsModalOpen(true);
-            }}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium transition-all"
-          >
-            <Plus size={18} />
-            New Workflow
-          </button>
+          <div className="flex items-center gap-4">
+            <UserMenu />
+            <div className="h-4 w-px bg-white/10 mx-1" />
+            <button
+              onClick={() => {
+                setEditingWorkflow(null);
+                setIsModalOpen(true);
+              }}
+              className="group flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-2xl font-bold text-sm transition-all shadow-[0_0_20px_rgba(37,99,235,0.2)] hover:shadow-[0_0_25px_rgba(37,99,235,0.4)]"
+            >
+              <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />
+              <span>New Workflow</span>
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

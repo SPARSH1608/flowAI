@@ -2,13 +2,15 @@ import { prisma } from "../db/prisma";
 import { SerializedWorkflowSchema, type SerializedWorkflow } from "@repo/schema";
 
 export async function saveWorkflow(
-    input: SerializedWorkflow
+    input: SerializedWorkflow,
+    userId: string
 ) {
     return prisma.workflow.create({
         data: {
             name: input.metadata.name,
             description: input.metadata.description,
             version: input.version,
+            userId,
             viewport: {
                 x: 0,
                 y: 0,
@@ -24,10 +26,11 @@ export async function saveWorkflow(
 
 export async function updateWorkflow(
     id: string,
-    input: SerializedWorkflow
+    input: SerializedWorkflow,
+    userId: string
 ) {
     return prisma.workflow.update({
-        where: { id },
+        where: { id, userId },
         data: {
             name: input.metadata.name,
             description: input.metadata.description,
@@ -40,15 +43,17 @@ export async function updateWorkflow(
     });
 }
 
-export async function getWorkflowById(id: string) {
+export async function getWorkflowById(id: string, userId: string) {
     return prisma.workflow.findUnique({
-        where: { id },
+        where: { id, userId },
         include: {
             executions: true,
         },
     });
 }
 
-export async function getWorkflows() {
-    return prisma.workflow.findMany();
+export async function getWorkflows(userId: string) {
+    return prisma.workflow.findMany({
+        where: { userId }
+    });
 }

@@ -1,9 +1,12 @@
-export async function updateWorkflow(id: string, definition: any) {
-    const response = await fetch(`http://localhost:3002/workflows/${id}`, {
+export async function updateWorkflow(id: string, definition: any, token?: string) {
+    const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+    };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/workflows/${id}`, {
         method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify(definition),
     });
 
@@ -15,17 +18,24 @@ export async function updateWorkflow(id: string, definition: any) {
     return response.json();
 }
 
-export async function fetchWorkflow(id: string) {
-    const response = await fetch(`http://localhost:3002/workflows/${id}`);
+export async function fetchWorkflow(id: string, token?: string) {
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/workflows/${id}`, { headers });
     if (!response.ok) {
         throw new Error("Failed to fetch workflow");
     }
     return response.json();
 }
 
-export async function deleteWorkflow(id: string) {
-    const response = await fetch(`http://localhost:3002/workflows/${id}`, {
+export async function deleteWorkflow(id: string, token?: string) {
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/workflows/${id}`, {
         method: "DELETE",
+        headers
     });
 
     if (!response.ok) {
@@ -36,12 +46,15 @@ export async function deleteWorkflow(id: string) {
     return response.json();
 }
 
-export async function createWorkflow(definition: any) {
-    const response = await fetch("http://localhost:3002/workflows", {
+export async function createWorkflow(definition: any, token?: string) {
+    const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+    };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/workflows`, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify(definition),
     });
 
@@ -56,13 +69,17 @@ export async function createWorkflow(definition: any) {
 export async function executeWorkflow(
     definition: any,
     onPartialUpdate?: (results: Record<string, any>) => void,
-    onNodeStart?: (nodeId: string) => void
+    onNodeStart?: (nodeId: string) => void,
+    token?: string
 ) {
-    const response = await fetch(`http://localhost:3002/workflows/execute`, {
+    const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+    };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/workflows/execute`, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify(definition),
     });
 
