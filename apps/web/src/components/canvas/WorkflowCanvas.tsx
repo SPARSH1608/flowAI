@@ -1,20 +1,22 @@
 "use client";
 
-import ReactFlow, {
+import {
+    ReactFlow,
     Background,
     Controls,
     MiniMap,
-    Node,
-    Edge,
-    Connection,
+    type Node,
+    type Edge,
+    type Connection,
     addEdge,
     applyNodeChanges,
     applyEdgeChanges,
-    NodeChange,
-    EdgeChange,
+    type NodeChange,
+    type EdgeChange,
     useReactFlow,
-    Viewport,
-} from "reactflow";
+    type Viewport,
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 import { useWorkflowStore } from "@/store/workflowStore";
 import { addNode } from "./CanvasContextMenu";
 
@@ -77,7 +79,10 @@ export default function WorkflowCanvas() {
         if (savedViewport) {
             try {
                 const viewport = JSON.parse(savedViewport) as Viewport;
-                setViewport(viewport, { duration: 0 });
+                // Wrap in requestAnimationFrame to ensure the D3 selection is ready
+                requestAnimationFrame(() => {
+                    setViewport(viewport, { duration: 0 });
+                });
             } catch (e) {
                 console.error("Failed to restore viewport:", e);
             }
@@ -102,7 +107,7 @@ export default function WorkflowCanvas() {
     const onDrop = (event: React.DragEvent) => {
         event.preventDefault();
 
-        const data = event.dataTransfer.getData("application/reactflow");
+        const data = event.dataTransfer.getData("application/xyflow");
         if (!data) return;
 
         try {

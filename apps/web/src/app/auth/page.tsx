@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Zap, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-export default function AuthPage() {
+function AuthContent() {
     const searchParams = useSearchParams();
     const mode = searchParams.get("mode") || "login";
     const [isLogin, setIsLogin] = useState(mode === "login");
@@ -153,5 +153,17 @@ export default function AuthPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function AuthPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-[#0A0A0C] flex items-center justify-center p-6">
+                <Loader2 className="animate-spin text-indigo-600" size={40} />
+            </div>
+        }>
+            <AuthContent />
+        </Suspense>
     );
 }

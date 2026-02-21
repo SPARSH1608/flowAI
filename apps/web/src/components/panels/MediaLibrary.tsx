@@ -48,7 +48,7 @@ export default function MediaLibrary({ onImageSelect }: MediaLibraryProps) {
 
     function handleDragStart(e: React.DragEvent, image: Image) {
         e.dataTransfer.setData(
-            "application/reactflow",
+            "application/xyflow",
             JSON.stringify({
                 type: "IMAGE_NODE",
                 imageData: {

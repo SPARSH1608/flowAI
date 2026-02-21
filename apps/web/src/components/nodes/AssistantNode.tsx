@@ -1,6 +1,6 @@
 "use client";
 
-import { NodeProps, Position } from "reactflow";
+import { type NodeProps, Position } from "@xyflow/react";
 import BaseNode from "./BaseNode";
 import TypedPort from "../ports/TypedPort";
 import ExternalPort from "../ports/ExternalPort";
@@ -9,11 +9,14 @@ import { useWorkflowStore } from "@/store/workflowStore";
 import { serializeWorkflow } from "@/utils/serializeWorkflow";
 import { executeWorkflow } from "@/utils/workflow";
 import { useParams } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import { Play, Sparkles, RefreshCcw } from "lucide-react";
 
 export default function AssistantNode({ data, selected, id }: NodeProps) {
+    const nodeData = data as any;
+    const { token } = useAuth();
     const params = useParams();
-    const config = data.config;
+    const config = nodeData.config;
     const setNodes = useWorkflowStore((s) => s.setNodes);
     const executionResult = useWorkflowStore((s) => s.executionResults?.[id]);
     const setExecutionResults = useWorkflowStore((s) => s.setExecutionResults);
@@ -47,7 +50,7 @@ export default function AssistantNode({ data, selected, id }: NodeProps) {
             };
             const result = await executeWorkflow(workflow, (partialResults) => {
                 setExecutionResults(partialResults);
-            });
+            }, undefined, token as any);
             if (result.success && result.result) {
                 setExecutionResults(result.result.nodeOutputs || {});
                 const errors = result.result.errors || [];

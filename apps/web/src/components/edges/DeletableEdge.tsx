@@ -5,9 +5,10 @@ import { X } from "lucide-react";
 import {
     BaseEdge,
     EdgeLabelRenderer,
-    EdgeProps,
+    type EdgeProps,
     getBezierPath,
-} from "reactflow";
+    useReactFlow,
+} from "@xyflow/react";
 
 export default function DeletableEdge({
     id,

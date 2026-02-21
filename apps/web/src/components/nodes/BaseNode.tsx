@@ -3,11 +3,12 @@
 import { ReactNode, useState, useRef, useEffect } from "react";
 import NodeStatusBadge from "./NodeStatusBadge";
 import { Play, Trash2 } from "lucide-react";
-import { NodeResizer } from "reactflow";
+import { NodeResizer } from "@xyflow/react";
 import { useWorkflowStore } from "@/store/workflowStore";
 import { serializeWorkflow } from "@/utils/serializeWorkflow";
 import { executeWorkflow } from "@/utils/workflow";
 import { useParams } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 interface BaseNodeProps {
     id: string;
@@ -34,6 +35,7 @@ export default function BaseNode({
     const executionResults = useWorkflowStore((s) => s.executionResults);
     const setNodeExecutionStatus = useWorkflowStore((s) => s.setNodeExecutionStatus);
     const executionStatus = useWorkflowStore((s) => s.nodeExecutionStatus[id]);
+    const { token } = useAuth();
 
     const handleReExecute = async () => {
         // Mapping is now handled in RightInspector auto-saves.
@@ -49,7 +51,7 @@ export default function BaseNode({
                 Object.keys(partialResults).forEach(nId => setNodeExecutionStatus(nId, "completed"));
             }, (nId) => {
                 setNodeExecutionStatus(nId, "running");
-            });
+            }, token as any);
             if (result.success && result.result) {
                 setExecutionResults(result.result.nodeOutputs || {});
                 if ((result as any).execution) {

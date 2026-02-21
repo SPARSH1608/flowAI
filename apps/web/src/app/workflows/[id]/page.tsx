@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
-import { ReactFlowProvider } from "reactflow";
+import { ReactFlowProvider } from "@xyflow/react";
 import { useWorkflowStore } from "@/store/workflowStore";
-import WorkflowCanvas from "@/components/canvas/WorkflowCanvas";
+import dynamic from "next/dynamic";
+const WorkflowCanvas = dynamic(() => import("@/components/canvas/WorkflowCanvas"), { ssr: false });
 import FloatingSidebar from "@/components/panels/FloatingSidebar";
 import TopBar from "@/components/panels/TopBar";
 import RightInspector from "@/components/panels/RightInspector";

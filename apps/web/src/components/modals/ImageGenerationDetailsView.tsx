@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { Type, Palette, Camera, Cpu, Terminal, ChevronDown } from "lucide-react";
 

@@ -67,7 +67,7 @@ function DashboardPage({ token }: { token: string }) {
       executionResults: {},
     };
 
-    const result = await createWorkflow(defaultWorkflow);
+    const result = await createWorkflow(defaultWorkflow, token);
     if (result.id) {
       router.push(`/workflows/${result.id}`);
     }
@@ -86,7 +86,7 @@ function DashboardPage({ token }: { token: string }) {
       fullWorkflow.metadata.description = data.description;
       fullWorkflow.metadata.updatedAt = Date.now();
 
-      await updateWorkflow(editingWorkflow.id, fullWorkflow);
+      await updateWorkflow(editingWorkflow.id, fullWorkflow, token);
       fetchWorkflows();
     } catch (error) {
       console.error("Failed to update workflow metadata", error);
@@ -99,7 +99,7 @@ function DashboardPage({ token }: { token: string }) {
     if (!confirm("Are you sure you want to delete this workflow?")) return;
 
     try {
-      await deleteWorkflow(id);
+      await deleteWorkflow(id, token);
       setWorkflows(workflows.filter(w => w.id !== id));
     } catch (error) {
       console.error("Failed to delete", error);

@@ -1,6 +1,6 @@
 "use client";
 
-import { NodeProps, Position } from "reactflow";
+import { type NodeProps, Position } from "@xyflow/react";
 import BaseNode from "./BaseNode";
 import ExternalPort from "../ports/ExternalPort";
 import { useWorkflowStore } from "@/store/workflowStore";
@@ -9,8 +9,9 @@ import { Upload, Loader2 } from "lucide-react";
 import { WorkflowNode } from "@/types/workflow";
 
 export default function ImageNode({ data, id, selected }: NodeProps) {
+    const nodeData = data as any;
     const setNodes = useWorkflowStore((s) => s.setNodes);
-    const { config } = data;
+    const { config } = nodeData;
 
     async function handleFile(file: File) {
         setNodes((nodes: WorkflowNode[]) =>

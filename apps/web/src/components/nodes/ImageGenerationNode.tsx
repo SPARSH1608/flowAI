@@ -1,4 +1,4 @@
-import { NodeProps, Position } from "reactflow";
+import { type NodeProps, Position } from "@xyflow/react";
 import BaseNode from "./BaseNode";
 import ExternalPort from "../ports/ExternalPort";
 import { useWorkflowStore } from "@/store/workflowStore";
@@ -7,10 +7,13 @@ import { executeWorkflow } from "@/utils/workflow";
 import { Play, Download, Eye, RefreshCcw, Upload, Settings2 } from "lucide-react";
 
 import { useParams } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
+    const nodeData = data as any;
+    const { token } = useAuth();
     const params = useParams();
-    const config = data.config;
+    const config = nodeData.config;
     const setNodes = useWorkflowStore((s) => s.setNodes);
     const executionResult = useWorkflowStore((s) => s.executionResults?.[id]);
     const setExecutionResults = useWorkflowStore((s) => s.setExecutionResults);
@@ -44,7 +47,7 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
                 setExecutionResults(partialResults);
             }, (nId) => {
                 setNodeExecutionStatus(nId, "running");
-            });
+            }, token as any);
 
             if (result.success && result.result) {
                 setExecutionResults(result.result.nodeOutputs || {});

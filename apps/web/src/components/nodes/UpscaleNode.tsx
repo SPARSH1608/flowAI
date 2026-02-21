@@ -1,21 +1,31 @@
 "use client";
 
-import { NodeProps, Position } from "reactflow";
+import { type NodeProps, Position } from "@xyflow/react";
 import BaseNode from "./BaseNode";
 import ExternalPort from "../ports/ExternalPort";
 import { useWorkflowStore } from "@/store/workflowStore";
 import { serializeWorkflow } from "@/utils/serializeWorkflow";
 import { executeWorkflow } from "@/utils/workflow";
-import { Maximize2, RefreshCcw, Layers, Settings2 } from "lucide-react";
+import { Maximize2, RefreshCcw, Layers, Settings2, Download, Eye, Upload } from "lucide-react";
 import { useParams } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 export default function UpscaleNode({ data, selected, id }: NodeProps) {
+    const nodeData = data as any;
+    const { token } = useAuth();
     const params = useParams();
     const updateNodeData = useWorkflowStore((s) => s.updateNodeData);
     const setSelectedNodeId = useWorkflowStore((s) => s.setSelectedNodeId);
 
     const executionResult = useWorkflowStore((s) => s.executionResults?.[id]);
     const setExecutionResults = useWorkflowStore((s) => s.setExecutionResults);
+
+    const rawResult = executionResult?.image || (executionResult?.['image[]'] && executionResult?.['image[]'][0]?.url) || (executionResult?.['image[]'] && typeof executionResult['image[]'][0] === 'string' ? executionResult['image[]'][0] : null);
+
+    let resultImage = typeof rawResult === 'string' ? rawResult : rawResult?.url;
+    if (resultImage && resultImage.startsWith('/')) {
+        resultImage = `${process.env.NEXT_PUBLIC_API_URL}${resultImage}`;
+    }
 
     const handleRun = async () => {
         try {
@@ -27,7 +37,7 @@ export default function UpscaleNode({ data, selected, id }: NodeProps) {
             };
             const result = await executeWorkflow(workflow, (partialResults) => {
                 setExecutionResults(partialResults);
-            });
+            }, undefined, token as any);
             if (result.success && result.result) {
                 setExecutionResults(result.result.nodeOutputs || {});
                 const errors = result.result.errors || [];
@@ -43,10 +53,28 @@ export default function UpscaleNode({ data, selected, id }: NodeProps) {
         }
     };
 
-    const resultImage = executionResult?.image || (executionResult?.['image[]'] && executionResult?.['image[]'][0]?.url) || (executionResult?.['image[]'] && typeof executionResult['image[]'][0] === 'string' ? executionResult['image[]'][0] : null);
+    const handleDownload = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!resultImage) return;
+        try {
+            const response = await fetch(resultImage);
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `upscaled-${id}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error("Download failed:", err);
+            window.open(resultImage, "_blank");
+        }
+    };
 
     return (
-        <BaseNode title="AI Upscaler" status={data.status} selected={selected} id={id} hideDefaultResult>
+        <BaseNode title="AI Upscaler" status={nodeData.status} selected={selected} id={id} hideDefaultResult>
             <ExternalPort direction="in" type="image" position={Position.Left} style={{ top: "50%" }} />
             <ExternalPort direction="out" type="image" position={Position.Right} style={{ top: "50%" }} />
 
@@ -54,14 +82,59 @@ export default function UpscaleNode({ data, selected, id }: NodeProps) {
                 {resultImage ? (
                     <div className="relative aspect-video rounded-xl overflow-hidden border border-white/5 bg-black/40 group">
                         <img
-                            src={typeof resultImage === 'string' ? resultImage : resultImage.url}
+                            src={resultImage}
                             alt="Upscaled"
                             className="w-full h-full object-contain"
                         />
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                            <span className="text-[10px] text-white font-medium bg-indigo-600 px-2 py-1 rounded-full flex items-center gap-1 shadow-lg shadow-indigo-900/50">
-                                <Maximize2 size={10} /> Upscaled
-                            </span>
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center gap-3 backdrop-blur-[1px]">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    window.open(resultImage, "_blank");
+                                }}
+                                className="p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md transition-all transform hover:scale-110 border border-white/20"
+                                title="Preview"
+                            >
+                                <Eye size={18} />
+                            </button>
+
+                            <button
+                                onClick={async (e) => {
+                                    e.stopPropagation();
+                                    if (!resultImage) return;
+                                    try {
+                                        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/images/save-generated`, {
+                                            method: "POST",
+                                            headers: { "Content-Type": "application/json" },
+                                            body: JSON.stringify({
+                                                imageUrl: resultImage,
+                                                purpose: "upscaled"
+                                            })
+                                        });
+                                        if (res.ok) {
+                                            alert("Saved to uploads!");
+                                        } else {
+                                            const err = await res.json();
+                                            alert(`Failed to save: ${err.error}`);
+                                        }
+                                    } catch (err) {
+                                        console.error("Save failed:", err);
+                                        alert("Failed to save image");
+                                    }
+                                }}
+                                className="p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md transition-all transform hover:scale-110 border border-white/20"
+                                title="Save to Uploads"
+                            >
+                                <Upload size={18} />
+                            </button>
+
+                            <button
+                                onClick={handleDownload}
+                                className="p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md transition-all transform hover:scale-110 border border-white/20"
+                                title="Download"
+                            >
+                                <Download size={18} />
+                            </button>
                         </div>
                     </div>
                 ) : (

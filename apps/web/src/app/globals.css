@@ -1,8 +1,7 @@
+@import "@xyflow/react/dist/style.css";
 @import "tailwindcss";
 
-@import "reactflow/dist/style.css";
-
-.react-flow__pane {
+.xy-flow__pane {
   background-color: #0a0a0a;
 }
 
@@ -11,7 +10,7 @@
   cursor: url("https://api.iconify.design/lucide:scissors.svg?color=%23ef4444&width=24&height=24") 12 12, auto !important;
 }
 
-.react-flow__attribution {
+.xy-flow__attribution {
   display: none !important;
 }
 

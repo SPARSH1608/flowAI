@@ -6,13 +6,15 @@ export const UpscaleExecutor: NodeExecutor = {
     async execute(nodeId, config, inputs, state) {
         console.log(`[UpscaleExecutor] Executing node ${nodeId}`);
 
-        const rawImage = inputs.image || (inputs["image[]"] && inputs["image[]"][0]);
-        if (!rawImage) {
+        const rawInput = inputs.image || inputs["image[]"];
+        if (!rawInput) {
             console.warn(`[UpscaleExecutor] Node ${nodeId} has no image input. Inputs:`, JSON.stringify(inputs));
             throw new Error("No image provided for upscaling. Please ensure an image node is connected.");
         }
 
-        const imageUrl = typeof rawImage === 'string' ? rawImage : (rawImage.url || rawImage.image);
+        const imageItem = Array.isArray(rawInput) ? rawInput[0] : rawInput;
+        const imageUrl = typeof imageItem === 'string' ? imageItem : (imageItem.url || imageItem.image || imageItem.imageUrl);
+
         if (!imageUrl) {
             throw new Error("Invalid image input format. Could not find image URL.");
         }
@@ -31,10 +33,15 @@ export const UpscaleExecutor: NodeExecutor = {
                 },
             });
 
-            // Extract image URL from result
-            const outputUrl = result.image?.url || result.url || result.data?.image?.url;
+            // Extract image URL from result - handling multiple possible response shapes from Fal
+            const outputUrl = result.image?.url ||
+                result.url ||
+                result.data?.image?.url ||
+                (typeof result.image === 'string' ? result.image : null) ||
+                (Array.isArray(result.images) ? (result.images[0]?.url || result.images[0]) : null);
 
             if (!outputUrl) {
+                console.error("[UpscaleExecutor] Could not extract URL from result:", JSON.stringify(result));
                 throw new Error("Upscale failed - no output image URL found in response");
             }
 
