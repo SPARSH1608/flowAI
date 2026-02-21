@@ -53,11 +53,11 @@ export default function WorkflowCanvas() {
     const { fitView, setViewport } = useReactFlow();
     const [isInitialized, setIsInitialized] = useState(false);
     const onNodesChange = (changes: NodeChange[]) => {
-        setNodes(applyNodeChanges(changes, nodes as Node[]) as any);
+        setNodes((nds) => applyNodeChanges(changes, nds as Node[]) as any);
     };
 
     const onEdgesChange = (changes: EdgeChange[]) => {
-        setEdges(applyEdgeChanges(changes, edges as Edge[]) as any);
+        setEdges((eds) => applyEdgeChanges(changes, eds as Edge[]) as any);
     };
 
     const onConnect = (connection: Connection) => {
@@ -166,9 +166,10 @@ export default function WorkflowCanvas() {
                 onConnect={onConnect}
             >
                 <Background
-                    gap={24}
+                    gap={36}
                     size={1}
-                    color="#222"
+                    color="#1A1A1A"
+                    variant={"dots" as any}
                 />
 
                 <Controls />

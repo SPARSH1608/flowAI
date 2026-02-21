@@ -26,6 +26,8 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
         resultImage = `http://localhost:3002${resultImage}`;
     }
 
+    const updateNodeData = useWorkflowStore((s) => s.updateNodeData);
+
     const updateConfig = (key: string, value: any) => {
         setNodes((nodes: any[]) =>
             nodes.map((node) => {
@@ -72,6 +74,7 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
     const handleRun = async () => {
         console.log("Run/Regenerate clicked for node:", id);
         try {
+            updateNodeData(id, { status: "executing" });
             console.log("ImageGenerationNode: workflowId from params:", params?.id);
             const workflow = {
                 ...serializeWorkflow(),
@@ -79,24 +82,34 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
                 workflowId: params?.id as string,
             };
             console.log("ImageGenerationNode: executing workflow with payload:", workflow);
-            const result = await executeWorkflow(workflow);
+            const result = await executeWorkflow(workflow, (partialResults) => {
+                setExecutionResults(partialResults);
+            });
 
             if (result.success && result.result) {
-                const outputs = result.result.nodeOutputs || {};
+                setExecutionResults(result.result.nodeOutputs || {});
 
+                // Check for errors specific to this node after final results are set
+                const outputs = result.result.nodeOutputs || {};
                 if (!outputs[id]) {
                     const errors = result.result.errors || [];
                     const myError = errors.find((e: any) => e.nodeId === id);
                     if (myError) {
                         alert(`❌ Execution Failed for this node!\nError: ${myError.error}`);
+                        updateNodeData(id, { status: "error" });
+                    } else {
+                        updateNodeData(id, { status: "idle" });
                     }
+                } else {
+                    updateNodeData(id, { status: "idle" });
                 }
-
-                setExecutionResults(outputs);
+            } else {
+                updateNodeData(id, { status: "error" });
             }
         } catch (error) {
             console.error("Failed to re-run workflow:", error);
             alert("Failed to regenerate");
+            updateNodeData(id, { status: "error" });
         }
     };
 
@@ -137,103 +150,99 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
             </div>
 
             <div className="flex gap-2 text-xs">
-                <input
-                    type="number"
-                    className="w-1/2 bg-neutral-800 border border-neutral-700 rounded p-1"
-                    placeholder="Width"
-                    defaultValue={config.size?.width || ""}
-                    onBlur={(e) => updateSize("width", +e.target.value)}
-                />
-                <input
-                    type="number"
-                    className="w-1/2 bg-neutral-800 border border-neutral-700 rounded p-1"
-                    placeholder="Height"
-                    defaultValue={config.size?.height || ""}
-                    onBlur={(e) => updateSize("height", +e.target.value)}
-                />
+                <div className="flex-1">
+                    <label className="text-[10px] text-neutral-500 mb-0.5 block">Width</label>
+                    <input
+                        type="number"
+                        className="nodrag w-full bg-neutral-800 border border-neutral-700 rounded p-1 text-xs text-neutral-300"
+                        value={config.size?.width || 1024}
+                        onChange={(e) => updateSize("width", parseInt(e.target.value))}
+                    />
+                </div>
+                <div className="flex-1">
+                    <label className="text-[10px] text-neutral-500 mb-0.5 block">Height</label>
+                    <input
+                        type="number"
+                        className="nodrag w-full bg-neutral-800 border border-neutral-700 rounded p-1 text-xs text-neutral-300"
+                        value={config.size?.height || 768}
+                        onChange={(e) => updateSize("height", parseInt(e.target.value))}
+                    />
+                </div>
             </div>
 
             <AdvancedToggle>
                 <div className="space-y-2">
                     <input
                         type="number"
-                        className="w-full bg-neutral-800 border border-neutral-700 rounded p-1 text-xs"
+                        className="nodrag w-full bg-neutral-800 border border-neutral-700 rounded p-1 text-xs"
                         placeholder="CFG Scale"
-                        defaultValue={config.cfgScale || ""}
-                        onBlur={(e) => updateConfig("cfgScale", +e.target.value)}
+                        value={config.cfgScale || ""}
+                        onChange={(e) => updateConfig("cfgScale", +e.target.value)}
                     />
                     <input
                         type="number"
-                        className="w-full bg-neutral-800 border border-neutral-700 rounded p-1 text-xs"
+                        className="nodrag w-full bg-neutral-800 border border-neutral-700 rounded p-1 text-xs"
                         placeholder="Steps"
-                        defaultValue={config.steps || ""}
-                        onBlur={(e) => updateConfig("steps", +e.target.value)}
+                        value={config.steps || ""}
+                        onChange={(e) => updateConfig("steps", +e.target.value)}
                     />
 
                     <select
-                        className="w-full bg-neutral-800 border border-neutral-700 rounded p-1 text-xs text-neutral-300"
+                        className="nodrag w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2 text-xs text-neutral-300 focus:outline-none focus:border-neutral-700"
                         defaultValue={config.model || "fal-ai/flux-realism"}
                         onChange={(e) => updateConfig("model", e.target.value)}
                     >
-                        <option value="fal-ai/flux-realism">Flux Realism (Default)</option>
-                        <option value="fal-ai/flux-pro/v1.1">Flux Pro 1.1 (Premium)</option>
-                        <option value="fal-ai/flux/dev">Flux Dev</option>
-                        <option value="fal-ai/flux/schnell">Flux Schnell (Fast)</option>
-                        <option value="fal-ai/recraft-v3">Recraft V3 (Vector/Art)</option>
-                        <option value="custom">Custom Model</option>
+                        <optgroup label="Flux Family">
+                            <option value="fal-ai/flux-realism">Flux Realism (Balanced)</option>
+                            <option value="fal-ai/flux-pro/v1.1">Flux Pro 1.1 (Premium)</option>
+                            <option value="fal-ai/flux/dev">Flux Dev</option>
+                            <option value="fal-ai/flux/schnell">Flux Schnell (Fast)</option>
+                        </optgroup>
+                        <optgroup label="Other Models">
+                            <option value="fal-ai/recraft-v3">Recraft V3 (Design/Art)</option>
+                            <option value="fal-ai/stable-diffusion-v35-large">SD 3.5 Large</option>
+                            <option value="fal-ai/ip-adapter-face-id">IP-Adapter Face ID</option>
+                            <option value="custom">Custom Fal Model</option>
+                        </optgroup>
                     </select>
 
                     {config.model === "custom" && (
                         <input
                             type="text"
-                            className="w-full bg-neutral-800 border border-neutral-700 rounded p-1 text-xs"
-                            placeholder="fal-ai/model-name (e.g. fal-ai/flux-lora)"
-                            defaultValue={config.customModel || ""}
-                            onBlur={(e) => updateConfig("customModel", e.target.value)}
+                            className="nodrag w-full bg-neutral-800 border border-neutral-700 rounded p-1 text-xs text-neutral-300"
+                            placeholder="fal-ai/..."
+                            value={config.customModel || ""}
+                            onChange={(e) => updateConfig("customModel", e.target.value)}
                         />
                     )}
 
                     <div className="space-y-1 mt-2">
                         <div className="flex justify-between text-[10px] text-neutral-400">
                             <span>Identity Strength</span>
-                            <span>{config.strength || 0.75}</span>
+                            <span>{config.strength ?? 0.5}</span>
                         </div>
                         <input
                             type="range"
-                            min="0.1"
-                            max="1.0"
-                            step="0.05"
-                            className="w-full h-1 bg-neutral-700 rounded-lg appearance-none cursor-pointer"
-                            defaultValue={config.strength || 0.75}
-                            onChange={(e) => {
-                                const val = parseFloat(e.target.value);
-                                updateConfig("strength", val);
-                                e.target.title = val.toFixed(2);
-                            }}
+                            min="0"
+                            max="1"
+                            step="0.01"
+                            value={config.strength ?? 0.5}
+                            onChange={(e) => updateConfig("strength", parseFloat(e.target.value))}
+                            className="nodrag w-full h-1.5 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
                         />
 
                     </div>
 
-                    {executionResult?.debugInfo && (
-                        <div className="mt-4 pt-4 border-t border-neutral-800">
-                            <h3 className="text-[10px] uppercase text-neutral-500 font-semibold mb-2">Debug Info</h3>
-                            <div className="bg-black/50 rounded p-2 text-[10px] font-mono text-neutral-400 overflow-x-auto whitespace-pre-wrap max-h-40 overflow-y-auto">
-                                {JSON.stringify(executionResult.debugInfo, null, 2)}
-                            </div>
-                        </div>
-                    )}
                 </div>
             </AdvancedToggle>
 
             <button
-                onClick={(e) => {
-                    e.stopPropagation();
-                    handleRun();
-                }}
-                className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg text-xs font-medium transition-colors mt-2"
+                onClick={handleRun}
+                disabled={data.status === "executing"}
+                className="nodrag w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white p-2 rounded text-xs font-semibold transition-colors mt-4"
             >
                 {resultImage ? <RefreshCcw size={14} /> : <Play size={14} />}
-                {resultImage ? "Regenerate" : "Generate"}
+                {data.status === "executing" ? "Generating..." : resultImage ? "Regenerate" : "Generate"}
             </button>
         </>
     );
@@ -328,11 +337,6 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
                         </div>
                     </div>
 
-                    {selected && (
-                        <div className="pt-2 border-t border-neutral-800 animate-in slide-in-from-top-2 fade-in duration-200">
-                            {renderConfigurationForm()}
-                        </div>
-                    )}
                 </div>
             ) : (
                 renderConfigurationForm()

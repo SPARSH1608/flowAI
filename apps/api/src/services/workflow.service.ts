@@ -14,12 +14,22 @@ export async function saveWorkflow(
                 y: 0,
                 zoom: 1
             },
-            definition: {
-                nodes: [],
-                edges: [],
+            definition: input.canvas as any,
+        },
+    });
+}
 
-            },
-
+export async function updateWorkflow(
+    id: string,
+    input: SerializedWorkflow
+) {
+    return prisma.workflow.update({
+        where: { id },
+        data: {
+            name: input.metadata.name,
+            description: input.metadata.description,
+            version: input.version,
+            definition: input.canvas as any,
         },
     });
 }

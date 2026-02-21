@@ -13,7 +13,7 @@ interface WorkflowState {
 
     addNode: (node: WorkflowNode) => void;
     setNodes: (nodes: WorkflowNode[] | ((prev: WorkflowNode[]) => WorkflowNode[])) => void;
-    setEdges: (edges: WorkflowEdge[]) => void;
+    setEdges: (edges: WorkflowEdge[] | ((prev: WorkflowEdge[]) => WorkflowEdge[])) => void;
     deleteNode: (id: string) => void;
     deleteEdge: (id: string) => void;
     deleteMode: boolean;
@@ -23,6 +23,7 @@ interface WorkflowState {
     setExecutionResults: (results: Record<string, any>) => void;
     setWorkflow: (workflow: { nodes: WorkflowNode[]; edges: WorkflowEdge[]; executionResults?: Record<string, any>; metadata?: { name: string; description?: string } }) => void;
     setMetadata: (metadata: { name: string; description?: string }) => void;
+    updateNodeData: (id: string, dataParams: any) => void;
 }
 
 export const useWorkflowStore = create<WorkflowState>((set, get) => ({
@@ -54,7 +55,10 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
         }),
 
     setEdges: (edges) =>
-        set((state) => ({ nodes: state.nodes, edges })),
+        set((state) => {
+            const nextEdges = typeof edges === 'function' ? edges(state.edges) : edges;
+            return { nodes: state.nodes, edges: nextEdges };
+        }),
 
     deleteNode: (id: string) =>
         set((state) => ({
@@ -76,4 +80,11 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
         // No-op or fetch logic can go here effectively
         // Since we are moving to DB-first loading, we can leave this empty or remove calls to it.
     },
+
+    updateNodeData: (id: string, dataParams: any) =>
+        set((state) => ({
+            nodes: state.nodes.map((n) =>
+                n.id === id ? { ...n, data: { ...n.data, ...dataParams } } : n
+            ),
+        })),
 }));

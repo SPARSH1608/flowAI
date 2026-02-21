@@ -4,6 +4,7 @@ import {
 } from "@repo/schema";
 import {
     saveWorkflow,
+    updateWorkflow,
     getWorkflowById,
     getWorkflows,
 } from "../services/workflow.service";
@@ -28,6 +29,31 @@ export async function createWorkflow(
         id: workflow.id,
         message: "Workflow saved",
     });
+}
+
+export async function updateWorkflowController(
+    req: Request,
+    res: Response
+) {
+    const { id } = req.params;
+    const parsed =
+        SerializedWorkflowSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+        return res.status(400).json({
+            error: parsed.error.format(),
+        });
+    }
+
+    try {
+        const workflow = await updateWorkflow(id as string, parsed.data);
+        res.json({
+            id: workflow.id,
+            message: "Workflow updated",
+        });
+    } catch (e) {
+        res.status(500).json({ error: "Failed to update workflow" });
+    }
 }
 
 export async function fetchWorkflow(
@@ -74,19 +100,30 @@ export async function executeWorkflowController(
 
         console.log("Executing workflow with", nodes.length, "nodes");
 
+        // Set headers for streaming
+        res.setHeader('Content-Type', 'application/x-ndjson');
+        res.setHeader('Transfer-Encoding', 'chunked');
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+
         // Pass the workflow in the format the executor expects
         const result = await executeWorkflow({
             nodes,
             edges: edges || [],
             targetNodeId: workflowDefinition.targetNodeId,
             executionResults: workflowDefinition.executionResults,
+        }, (nodeId, output) => {
+            console.log(`[executeWorkflowController] Node ${nodeId} complete, streaming...`);
+            // Stream the individual node result
+            res.write(JSON.stringify({ type: 'node_complete', nodeId, output }) + '\n');
+            // If response has a flush method (common in compression middleware), use it
+            if ((res as any).flush) (res as any).flush();
         });
 
-
-        res.json({
-            success: true,
-            result,
-        });
+        console.log("[executeWorkflowController] Workflow complete, sending final result");
+        res.write(JSON.stringify({ type: 'final_result', success: true, result }) + '\n');
+        res.end();
     } catch (error: any) {
         console.error("Workflow execution error:", error);
         res.status(500).json({

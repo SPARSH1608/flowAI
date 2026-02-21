@@ -2,4 +2,5 @@ export type NodeStatus =
     | "idle"
     | "configured"
     | "error"
-    | "disabled";
+    | "disabled"
+    | "executing";

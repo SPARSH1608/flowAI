@@ -15,43 +15,46 @@ export function buildLangGraph(
 ) {
     let executionOrder = compiled.executionOrder;
 
-    // If targetNodeId is provided, prune the graph to only include ancestors
+    // If targetNodeId is provided, prune the graph to only include nodes that MUST run
     if (compiled.targetNodeId) {
         console.log(`Pruning graph for target node: ${compiled.targetNodeId}`);
-        const ancestors = new Set<string>();
+        const toExecute = new Set<string>();
         const queue = [compiled.targetNodeId];
 
-        // Build reverse adjacency list/map for efficient traversal
-        // The compiled.adjacency is from -> [to], we need to -> [from]
+        // Target node must always execute if triggered
+        toExecute.add(compiled.targetNodeId);
+
+        // Build reverse adjacency
         const reverseAdjacency = new Map<string, string[]>();
         for (const [from, tos] of compiled.adjacency.entries()) {
             for (const to of tos) {
-                if (!reverseAdjacency.has(to)) {
-                    reverseAdjacency.set(to, []);
-                }
+                if (!reverseAdjacency.has(to)) reverseAdjacency.set(to, []);
                 reverseAdjacency.get(to)!.push(from);
             }
         }
 
         while (queue.length > 0) {
             const current = queue.shift()!;
-            if (ancestors.has(current)) continue;
-
-            ancestors.add(current);
-
             const parents = reverseAdjacency.get(current) || [];
+
             for (const parent of parents) {
-                if (!ancestors.has(parent)) {
-                    queue.push(parent);
+                // We need to execute a parent if it DOESN'T have a cached result
+                // because its descendant (current) needs it.
+                // If the parent HAS a result, we stop there (seed will provide it).
+                if (!compiled.executionResults?.[parent]) {
+                    if (!toExecute.has(parent)) {
+                        toExecute.add(parent);
+                        queue.push(parent);
+                    }
                 }
             }
         }
 
-        // Filter execution order to only include ancestors
-        executionOrder = compiled.executionOrder.filter(id => ancestors.has(id));
+        executionOrder = compiled.executionOrder.filter(id => toExecute.has(id));
         console.log(`Pruned execution order:`, executionOrder);
     }
 
+    // @ts-ignore
     const graph = new StateGraph({
         channels: {
             nodeOutputs: {
@@ -69,30 +72,10 @@ export function buildLangGraph(
         const node = compiled.nodes.get(nodeId);
         console.log('executing node', node);
 
-        // Check if we have a cached result for this node (and it's not the target node we want to regenerate)
-        const cachedResult = compiled.executionResults?.[nodeId];
-        const shouldUseCache = cachedResult && nodeId !== compiled.targetNodeId;
+        const executor = EXECUTOR_REGISTRY[node.type as keyof typeof EXECUTOR_REGISTRY];
 
-        let executor;
-
-        if (shouldUseCache) {
-            console.log(`Using cached result for node ${nodeId}`);
-            executor = {
-                execute: async (_id: string, _config: any, _inputs: any, _state: any) => {
-                    return {
-                        nodeOutputs: {
-                            [nodeId]: cachedResult
-                        },
-                        errors: []
-                    };
-                }
-            };
-        } else {
-            executor = EXECUTOR_REGISTRY[node.type as keyof typeof EXECUTOR_REGISTRY];
-
-            if (!executor) {
-                throw new Error(`No executor for ${node.type}`);
-            }
+        if (!executor) {
+            throw new Error(`No executor for ${node.type}`);
         }
 
         graph.addNode(nodeId, async (state) => {

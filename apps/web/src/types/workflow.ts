@@ -26,6 +26,8 @@ export interface WorkflowNode {
         status?: NodeStatus;
         config: any;
     };
+    width?: number;
+    height?: number;
 }
 
 export interface WorkflowEdge {

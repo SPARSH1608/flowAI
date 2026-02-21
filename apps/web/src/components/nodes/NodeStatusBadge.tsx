@@ -7,6 +7,7 @@ const STATUS_COLORS: Record<NodeStatus, string> = {
     configured: "bg-emerald-500",
     error: "bg-red-500",
     disabled: "bg-neutral-700",
+    executing: "bg-blue-500 animate-pulse ring-2 ring-blue-500/50",
 };
 
 export default function NodeStatusBadge({

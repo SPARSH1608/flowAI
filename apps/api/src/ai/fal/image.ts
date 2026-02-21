@@ -13,6 +13,8 @@ interface GenerateImagesOptions {
     numImages: number;
     strength?: number;
     adType?: AdType;
+    width?: number;
+    height?: number;
 }
 
 export async function generateImagesFal({
@@ -22,6 +24,8 @@ export async function generateImagesFal({
     numImages,
     strength,
     adType,
+    width,
+    height,
 }: GenerateImagesOptions): Promise<string[]> {
     console.log("Generating images with fal.ai:", {
         model,
@@ -29,6 +33,8 @@ export async function generateImagesFal({
         numImages,
         strength,
         adType,
+        width,
+        height,
         hasReferenceImages: !!imageUrls?.length,
     });
 
@@ -44,7 +50,7 @@ export async function generateImagesFal({
     } else if (resolvedModel === "fal-ai/ip-adapter-face-id" && hasReferenceImages) {
         return generateWithFaceId(resolvedModel, prompt, imageUrls![0] as string, numImages);
     } else {
-        return generateStandard(resolvedModel, prompt, imageUrls, numImages, strength);
+        return generateStandard(resolvedModel, prompt, imageUrls, numImages, strength, width, height);
     }
 }
 
@@ -158,6 +164,11 @@ async function generateWithFaceId(
             const result: any = await fal.subscribe(model, { input });
             const urls = extractImageUrls(result);
 
+            if (urls.length === 0) {
+                console.log("[FaceID] No images extracted from result. Falling back to Kontext...");
+                return generateWithKontext("fal-ai/flux-pro/kontext", prompt, [uploadedFaceUrl], numImages);
+            }
+
             for (const url of urls) {
                 const saved = await downloadAndSave(url, uploadDir);
                 if (saved) savedUrls.push(saved);
@@ -171,7 +182,8 @@ async function generateWithFaceId(
     }
 
     if (savedUrls.length === 0) {
-        throw new Error("No images were successfully generated with FaceID");
+        console.log("[FaceID] Failed to save any images. Falling back to Kontext...");
+        return generateWithKontext("fal-ai/flux-pro/kontext", prompt, [uploadedFaceUrl], numImages);
     }
 
     return savedUrls;
@@ -182,7 +194,9 @@ async function generateStandard(
     prompt: string,
     imageUrls?: string[],
     numImages: number = 1,
-    strength?: number
+    strength?: number,
+    width?: number,
+    height?: number
 ): Promise<string[]> {
     console.log("[Standard] Generating with standard model...");
 
@@ -196,9 +210,13 @@ async function generateStandard(
     const isFluxPro = model.includes("flux-pro");
 
     if (!isRecraft) {
-        input.image_size = "portrait_16_9";
+        if (width && height) {
+            input.image_size = { width, height };
+        } else {
+            input.image_size = "landscape_4_3";
+        }
         input.guidance_scale = isFluxPro ? 3.5 : 2.5;
-        input.num_inference_steps = 50;
+        input.num_inference_steps = isFluxPro ? 30 : 50;
     }
 
     if (imageUrls && imageUrls.length > 0) {
@@ -254,7 +272,15 @@ function extractImageUrls(result: any): string[] {
         ? (Array.isArray(result.images) ? result.images : [result.images])
         : result?.data?.images
             ? (Array.isArray(result.data.images) ? result.data.images : [result.data.images])
-            : [];
+            : result?.image
+                ? [result.image]
+                : result?.data?.image
+                    ? [result.data.image]
+                    : [];
+
+    if (images.length === 0) {
+        console.log("[extractImageUrls] No images found in result:", JSON.stringify(result, null, 2));
+    }
 
     return images
         .map((img: any) => img?.url || img)

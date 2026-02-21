@@ -35,13 +35,19 @@ export const ImageGenerationExecutor: NodeExecutor = {
             referenceImageCount: referenceImages.length,
         });
 
-        const compilerGraph = buildImageGenGraph();
+        let finalState: any;
 
-        const finalState = await compilerGraph.invoke({
-            userText,
-            inlinePrompt,
-            referenceImages,
-        });
+        if (config.debugInfoOverride) {
+            console.log("[ImageGenerationExecutor] Using OVERRIDDEN debug info");
+            finalState = config.debugInfoOverride;
+        } else {
+            const compilerGraph = buildImageGenGraph();
+            finalState = await compilerGraph.invoke({
+                userText,
+                inlinePrompt,
+                referenceImages,
+            });
+        }
 
         if (!finalState.finalPrompt) {
             throw new Error("Prompt compilation failed - no final prompt generated");
@@ -58,6 +64,9 @@ export const ImageGenerationExecutor: NodeExecutor = {
         if (model === "custom" && config.customModel) {
             model = config.customModel;
         }
+
+        const width = config.size?.width || 1024;
+        const height = config.size?.height || 768;
         const numImages = 1;
 
         const imageUrls = await generateImagesFal({
@@ -67,6 +76,8 @@ export const ImageGenerationExecutor: NodeExecutor = {
             numImages,
             strength: config.strength,
             adType: finalState.intent?.adType,
+            width,
+            height,
         });
 
         const output = {
@@ -78,6 +89,8 @@ export const ImageGenerationExecutor: NodeExecutor = {
                 debugInfo: {
                     receivedInputs: inputs,
                     usedConfig: config,
+                    intent: finalState.intent,
+                    visualPlan: finalState.visualPlan,
                     finalPrompt: finalState.finalPrompt
                 }
             },

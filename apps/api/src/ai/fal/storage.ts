@@ -5,6 +5,7 @@ import path from "path";
 
 export async function uploadToFal(imageUrl: string): Promise<string> {
     try {
+        if (!imageUrl) throw new Error("imageUrl is required");
         if (imageUrl.startsWith("http") && !imageUrl.includes("localhost")) {
             return imageUrl;
         }
@@ -41,7 +42,12 @@ export async function uploadToFal(imageUrl: string): Promise<string> {
         }
 
         const fileBuffer = await fs.readFile(absolutePath);
-        const blob = new Blob([fileBuffer]);
+        const extension = path.extname(absolutePath).toLowerCase();
+        let mimeType = "image/jpeg";
+        if (extension === ".png") mimeType = "image/png";
+        else if (extension === ".webp") mimeType = "image/webp";
+
+        const blob = new Blob([fileBuffer], { type: mimeType });
 
         const url = await fal.storage.upload(blob);
         console.log(`[uploadToFal] Upload successful. URL: ${url}`);

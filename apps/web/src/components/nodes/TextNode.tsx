@@ -37,12 +37,14 @@ export default function TextNode({ data, selected, id }: NodeProps) {
                 type="text"
                 position={Position.Right}
             />
-            <textarea
-                className="w-full h-32 bg-neutral-900/50 border border-neutral-800 rounded-lg p-3 text-neutral-200 text-xs focus:outline-none focus:border-neutral-700 resize-none font-mono leading-relaxed"
-                placeholder="Enter text..."
-                defaultValue={data.config?.text}
-                onBlur={(e) => handleChange(e.target.value)}
-            />
+            <div className="px-1">
+                <textarea
+                    className="nodrag w-full h-32 bg-transparent text-neutral-300 text-[13px] leading-relaxed focus:outline-none resize-none font-sans placeholder:text-neutral-600 custom-scrollbar"
+                    placeholder="Type starting prompt..."
+                    defaultValue={data.config?.text}
+                    onBlur={(e) => handleChange(e.target.value)}
+                />
+            </div>
         </BaseNode>
     );
 }
