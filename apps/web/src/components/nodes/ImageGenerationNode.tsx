@@ -1,11 +1,10 @@
 import { NodeProps, Position } from "reactflow";
 import BaseNode from "./BaseNode";
 import ExternalPort from "../ports/ExternalPort";
-import AdvancedToggle from "./AdvancedToggle";
 import { useWorkflowStore } from "@/store/workflowStore";
 import { serializeWorkflow } from "@/utils/serializeWorkflow";
 import { executeWorkflow } from "@/utils/workflow";
-import { Play, Download, Eye, RefreshCcw, Upload } from "lucide-react";
+import { Play, Download, Eye, RefreshCcw, Upload, Settings2 } from "lucide-react";
 
 import { useParams } from "next/navigation";
 
@@ -15,6 +14,8 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
     const setNodes = useWorkflowStore((s) => s.setNodes);
     const executionResult = useWorkflowStore((s) => s.executionResults?.[id]);
     const setExecutionResults = useWorkflowStore((s) => s.setExecutionResults);
+    const addExecution = useWorkflowStore((s) => s.addExecution);
+    const setNodeExecutionStatus = useWorkflowStore((s) => s.setNodeExecutionStatus);
 
     console.log(`ImageGenerationNode [${id}] render. Result key:`, executionResult);
 
@@ -27,49 +28,7 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
     }
 
     const updateNodeData = useWorkflowStore((s) => s.updateNodeData);
-
-    const updateConfig = (key: string, value: any) => {
-        setNodes((nodes: any[]) =>
-            nodes.map((node) => {
-                if (node.id === id) {
-                    return {
-                        ...node,
-                        data: {
-                            ...node.data,
-                            config: {
-                                ...node.data.config,
-                                [key]: value,
-                            },
-                        },
-                    };
-                }
-                return node;
-            })
-        );
-    };
-
-    const updateSize = (key: "width" | "height", value: number) => {
-        setNodes((nodes: any[]) =>
-            nodes.map((node) => {
-                if (node.id === id) {
-                    return {
-                        ...node,
-                        data: {
-                            ...node.data,
-                            config: {
-                                ...node.data.config,
-                                size: {
-                                    ...node.data.config?.size,
-                                    [key]: value,
-                                },
-                            },
-                        },
-                    };
-                }
-                return node;
-            })
-        );
-    };
+    const setSelectedNodeId = useWorkflowStore((s) => s.setSelectedNodeId);
 
     const handleRun = async () => {
         console.log("Run/Regenerate clicked for node:", id);
@@ -84,10 +43,19 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
             console.log("ImageGenerationNode: executing workflow with payload:", workflow);
             const result = await executeWorkflow(workflow, (partialResults) => {
                 setExecutionResults(partialResults);
+            }, (nId) => {
+                setNodeExecutionStatus(nId, "running");
             });
 
             if (result.success && result.result) {
                 setExecutionResults(result.result.nodeOutputs || {});
+                if (result.execution) {
+                    addExecution(result.execution);
+                }
+                Object.keys(result.result.nodeOutputs || {}).forEach(nId => setNodeExecutionStatus(nId, "completed"));
+                if (result.result.errors?.length) {
+                    result.result.errors.forEach((e: any) => setNodeExecutionStatus(e.nodeId, "error"));
+                }
 
                 // Check for errors specific to this node after final results are set
                 const outputs = result.result.nodeOutputs || {};
@@ -133,118 +101,25 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
         }
     };
 
-    const renderConfigurationForm = () => (
-        <>
-            <div className="space-y-3">
-                <div>
-                    <label className="text-[10px] uppercase text-neutral-500 font-semibold mb-1 block">
-                        Prompt
-                    </label>
-                    <textarea
-                        className="w-full h-20 bg-neutral-900/50 border border-neutral-800 rounded-lg p-2 text-neutral-200 text-xs focus:outline-none focus:border-neutral-700 resize-none placeholder:text-neutral-600"
-                        placeholder="Describe image..."
-                        defaultValue={config?.prompt}
-                        onBlur={(e) => updateConfig("prompt", e.target.value)}
-                    />
-                </div>
+    const renderEmptyState = () => (
+        <div className="flex flex-col items-center justify-center py-8 px-4 text-center border border-dashed border-white/10 rounded-xl bg-black/20">
+            <div className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center mb-3">
+                <Settings2 className="text-indigo-400" size={18} />
             </div>
-
-            <div className="flex gap-2 text-xs">
-                <div className="flex-1">
-                    <label className="text-[10px] text-neutral-500 mb-0.5 block">Width</label>
-                    <input
-                        type="number"
-                        className="nodrag w-full bg-neutral-800 border border-neutral-700 rounded p-1 text-xs text-neutral-300"
-                        value={config.size?.width || 1024}
-                        onChange={(e) => updateSize("width", parseInt(e.target.value))}
-                    />
-                </div>
-                <div className="flex-1">
-                    <label className="text-[10px] text-neutral-500 mb-0.5 block">Height</label>
-                    <input
-                        type="number"
-                        className="nodrag w-full bg-neutral-800 border border-neutral-700 rounded p-1 text-xs text-neutral-300"
-                        value={config.size?.height || 768}
-                        onChange={(e) => updateSize("height", parseInt(e.target.value))}
-                    />
-                </div>
-            </div>
-
-            <AdvancedToggle>
-                <div className="space-y-2">
-                    <input
-                        type="number"
-                        className="nodrag w-full bg-neutral-800 border border-neutral-700 rounded p-1 text-xs"
-                        placeholder="CFG Scale"
-                        value={config.cfgScale || ""}
-                        onChange={(e) => updateConfig("cfgScale", +e.target.value)}
-                    />
-                    <input
-                        type="number"
-                        className="nodrag w-full bg-neutral-800 border border-neutral-700 rounded p-1 text-xs"
-                        placeholder="Steps"
-                        value={config.steps || ""}
-                        onChange={(e) => updateConfig("steps", +e.target.value)}
-                    />
-
-                    <select
-                        className="nodrag w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2 text-xs text-neutral-300 focus:outline-none focus:border-neutral-700"
-                        defaultValue={config.model || "fal-ai/flux-realism"}
-                        onChange={(e) => updateConfig("model", e.target.value)}
-                    >
-                        <optgroup label="Flux Family">
-                            <option value="fal-ai/flux-realism">Flux Realism (Balanced)</option>
-                            <option value="fal-ai/flux-pro/v1.1">Flux Pro 1.1 (Premium)</option>
-                            <option value="fal-ai/flux/dev">Flux Dev</option>
-                            <option value="fal-ai/flux/schnell">Flux Schnell (Fast)</option>
-                        </optgroup>
-                        <optgroup label="Other Models">
-                            <option value="fal-ai/recraft-v3">Recraft V3 (Design/Art)</option>
-                            <option value="fal-ai/stable-diffusion-v35-large">SD 3.5 Large</option>
-                            <option value="fal-ai/ip-adapter-face-id">IP-Adapter Face ID</option>
-                            <option value="custom">Custom Fal Model</option>
-                        </optgroup>
-                    </select>
-
-                    {config.model === "custom" && (
-                        <input
-                            type="text"
-                            className="nodrag w-full bg-neutral-800 border border-neutral-700 rounded p-1 text-xs text-neutral-300"
-                            placeholder="fal-ai/..."
-                            value={config.customModel || ""}
-                            onChange={(e) => updateConfig("customModel", e.target.value)}
-                        />
-                    )}
-
-                    <div className="space-y-1 mt-2">
-                        <div className="flex justify-between text-[10px] text-neutral-400">
-                            <span>Identity Strength</span>
-                            <span>{config.strength ?? 0.5}</span>
-                        </div>
-                        <input
-                            type="range"
-                            min="0"
-                            max="1"
-                            step="0.01"
-                            value={config.strength ?? 0.5}
-                            onChange={(e) => updateConfig("strength", parseFloat(e.target.value))}
-                            className="nodrag w-full h-1.5 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                        />
-
-                    </div>
-
-                </div>
-            </AdvancedToggle>
-
+            <h3 className="text-sm font-semibold text-neutral-200 mb-1">Configure Node</h3>
+            <p className="text-xs text-neutral-500 max-w-[200px] mb-4">
+                Select this node to set up prompts and model parameters in the Inspector.
+            </p>
             <button
-                onClick={handleRun}
-                disabled={data.status === "executing"}
-                className="nodrag w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white p-2 rounded text-xs font-semibold transition-colors mt-4"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedNodeId(id);
+                }}
+                className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-medium text-neutral-300 transition-colors"
             >
-                {resultImage ? <RefreshCcw size={14} /> : <Play size={14} />}
-                {data.status === "executing" ? "Generating..." : resultImage ? "Regenerate" : "Generate"}
+                Open Inspector
             </button>
-        </>
+        </div>
     );
 
     return (
@@ -339,7 +214,7 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
 
                 </div>
             ) : (
-                renderConfigurationForm()
+                renderEmptyState()
             )}
         </BaseNode>
     );

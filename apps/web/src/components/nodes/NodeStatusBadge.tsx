@@ -3,11 +3,13 @@
 import { NodeStatus } from "@/types/nodeStatus";
 
 const STATUS_COLORS: Record<NodeStatus, string> = {
-    idle: "bg-neutral-600",
-    configured: "bg-emerald-500",
-    error: "bg-red-500",
-    disabled: "bg-neutral-700",
-    executing: "bg-blue-500 animate-pulse ring-2 ring-blue-500/50",
+    idle: "bg-white/20 border border-white/10",
+    configured: "bg-emerald-400 border border-emerald-500/50 shadow-[0_0_10px_rgba(52,211,153,0.4)]",
+    completed: "bg-emerald-400 border border-emerald-500/50 shadow-[0_0_10px_rgba(52,211,153,0.4)]",
+    error: "bg-red-400 border border-red-500/50 shadow-[0_0_10px_rgba(248,113,113,0.4)]",
+    disabled: "bg-neutral-800 border border-neutral-700",
+    executing: "bg-indigo-400 border border-indigo-500/50 animate-pulse shadow-[0_0_15px_rgba(129,140,248,0.6)]",
+    running: "bg-indigo-400 border border-indigo-500/50 animate-pulse shadow-[0_0_15px_rgba(129,140,248,0.6)]",
 };
 
 export default function NodeStatusBadge({

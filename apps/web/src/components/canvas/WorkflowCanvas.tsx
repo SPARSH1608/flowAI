@@ -49,7 +49,7 @@ function isValidConnection(connection: any) {
 }
 
 export default function WorkflowCanvas() {
-    const { nodes, edges, setNodes, setEdges, deleteNode, deleteEdge, deleteMode, toggleDeleteMode } = useWorkflowStore();
+    const { nodes, edges, setNodes, setEdges, deleteNode, deleteEdge, deleteMode, toggleDeleteMode, setSelectedNodeId } = useWorkflowStore();
     const { fitView, setViewport } = useReactFlow();
     const [isInitialized, setIsInitialized] = useState(false);
     const onNodesChange = (changes: NodeChange[]) => {
@@ -138,7 +138,7 @@ export default function WorkflowCanvas() {
 
     return (
         <div
-            className={`w-full h-full ${deleteMode ? 'delete-mode-active' : ''}`}
+            className={`w-full h-full bg-[#0E0E14] ${deleteMode ? 'delete-mode-active' : ''}`}
             onDrop={onDrop}
             onDragOver={onDragOver}
         >
@@ -155,8 +155,11 @@ export default function WorkflowCanvas() {
                     if (deleteMode) {
                         deleteNode(node.id);
                         toggleDeleteMode();
+                    } else {
+                        setSelectedNodeId(node.id);
                     }
                 }}
+                onPaneClick={() => setSelectedNodeId(null)}
                 onEdgeClick={(_, edge) => {
                     if (deleteMode) {
                         deleteEdge(edge.id);
@@ -166,13 +169,14 @@ export default function WorkflowCanvas() {
                 onConnect={onConnect}
             >
                 <Background
-                    gap={36}
+                    gap={24}
                     size={1}
-                    color="#1A1A1A"
+                    color="#ffffff"
+                    style={{ opacity: 0.05 }}
                     variant={"dots" as any}
                 />
 
-                <Controls />
+                <Controls className="react-flow__controls-custom" />
 
 
             </ReactFlow>

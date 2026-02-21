@@ -6,6 +6,7 @@ import { useWorkflowStore } from "@/store/workflowStore";
 import WorkflowCanvas from "@/components/canvas/WorkflowCanvas";
 import FloatingSidebar from "@/components/panels/FloatingSidebar";
 import TopBar from "@/components/panels/TopBar";
+import RightInspector from "@/components/panels/RightInspector";
 import { useParams } from "next/navigation";
 import { fetchWorkflow } from "@/utils/workflow";
 
@@ -40,19 +41,29 @@ export default function WorkflowPage() {
                     metadata: {
                         name: data.name,
                         description: data.description
-                    }
+                    },
+                    executions: data.executions || [],
                 });
             })
             .catch((err) => console.error("Failed to load workflow:", err));
     }, [params.id, setWorkflow]);
 
     return (
-        <div className="flex flex-col h-screen bg-black">
+        <div className="flex flex-col h-screen bg-[#0E0E14] text-neutral-300 overflow-hidden font-sans">
             <TopBar />
-            <main className="relative flex-1 overflow-hidden">
-                <FloatingSidebar />
+
+            <main className="flex flex-1 h-[calc(100vh-60px)] relative overflow-hidden">
                 <ReactFlowProvider>
-                    <WorkflowCanvas />
+                    {/* Left Dock */}
+                    <FloatingSidebar />
+
+                    {/* Center Canvas */}
+                    <div className="flex-1 relative bg-[#0E0E14] border-x border-white/5">
+                        <WorkflowCanvas />
+                    </div>
+
+                    {/* Right Inspector Drawer */}
+                    <RightInspector />
                 </ReactFlowProvider>
             </main>
         </div>

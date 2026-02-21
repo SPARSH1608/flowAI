@@ -37,13 +37,10 @@ export default function TextNode({ data, selected, id }: NodeProps) {
                 type="text"
                 position={Position.Right}
             />
-            <div className="px-1">
-                <textarea
-                    className="nodrag w-full h-32 bg-transparent text-neutral-300 text-[13px] leading-relaxed focus:outline-none resize-none font-sans placeholder:text-neutral-600 custom-scrollbar"
-                    placeholder="Type starting prompt..."
-                    defaultValue={data.config?.text}
-                    onBlur={(e) => handleChange(e.target.value)}
-                />
+            <div className="px-3 py-1 bg-[#161618] rounded-lg border border-white/5 mx-1 flex items-center justify-between">
+                <span className="text-xs text-neutral-400 font-medium truncate max-w-[200px]">
+                    {data.config?.text ? `"${data.config.text}"` : "Empty text block"}
+                </span>
             </div>
         </BaseNode>
     );

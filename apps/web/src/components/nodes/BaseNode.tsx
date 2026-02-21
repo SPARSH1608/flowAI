@@ -2,10 +2,9 @@
 
 import { ReactNode, useState, useRef, useEffect } from "react";
 import NodeStatusBadge from "./NodeStatusBadge";
-import { Info, Play, Trash2 } from "lucide-react";
+import { Play, Trash2 } from "lucide-react";
 import { NodeResizer } from "reactflow";
 import { useWorkflowStore } from "@/store/workflowStore";
-import NodeInfoModal from "../modals/NodeInfoModal";
 import { serializeWorkflow } from "@/utils/serializeWorkflow";
 import { executeWorkflow } from "@/utils/workflow";
 import { useParams } from "next/navigation";
@@ -31,27 +30,14 @@ export default function BaseNode({
     const deleteNode = useWorkflowStore((s) => s.deleteNode);
     const setNodes = useWorkflowStore((s) => s.setNodes);
     const setExecutionResults = useWorkflowStore((s) => s.setExecutionResults);
+    const addExecution = useWorkflowStore((s) => s.addExecution);
     const executionResults = useWorkflowStore((s) => s.executionResults);
+    const setNodeExecutionStatus = useWorkflowStore((s) => s.setNodeExecutionStatus);
+    const executionStatus = useWorkflowStore((s) => s.nodeExecutionStatus[id]);
 
-    const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
-
-    const handleReExecute = async (editedData?: any) => {
-        setIsInfoModalOpen(false);
-        if (editedData) {
-            // Map edited info back to config override based on node type
-            setNodes((nodes) => nodes.map(n => {
-                if (n.id === id) {
-                    if (id.includes('image-generation')) {
-                        return { ...n, data: { ...n.data, config: { ...n.data.config, debugInfoOverride: editedData } } };
-                    } else if (id.includes('assistant') || id.includes('text')) {
-                        return { ...n, data: { ...n.data, config: { ...n.data.config, text: editedData.text } } };
-                    }
-                }
-                return n;
-            }));
-        }
-
-        // Re-run the node
+    const handleReExecute = async () => {
+        // Mapping is now handled in RightInspector auto-saves.
+        // Re-run the node directly
         setTimeout(async () => {
             const workflow = {
                 ...serializeWorkflow(),
@@ -60,17 +46,29 @@ export default function BaseNode({
             };
             const result = await executeWorkflow(workflow, (partialResults) => {
                 setExecutionResults(partialResults);
+                Object.keys(partialResults).forEach(nId => setNodeExecutionStatus(nId, "completed"));
+            }, (nId) => {
+                setNodeExecutionStatus(nId, "running");
             });
             if (result.success && result.result) {
                 setExecutionResults(result.result.nodeOutputs || {});
+                if ((result as any).execution) {
+                    addExecution((result as any).execution);
+                }
+                Object.keys(result.result.nodeOutputs || {}).forEach(nId => setNodeExecutionStatus(nId, "completed"));
+                if (result.result.errors?.length) {
+                    result.result.errors.forEach((e: any) => setNodeExecutionStatus(e.nodeId, "error"));
+                }
             }
         }, 100);
     };
 
     const nodeResult = executionResults?.[id];
-    // Gather everything relevant to edit/review for this node
-    const debugData = nodeResult?.debugInfo || nodeResult;
     const node = useWorkflowStore(s => s.nodes.find(n => n.id === id));
+
+    // Add pulsing border ring when node is actively running
+    const isRunning = executionStatus?.status === "running";
+    const isError = executionStatus?.status === "error";
 
     return (
         <>
@@ -88,61 +86,60 @@ export default function BaseNode({
             />
 
             <div className={`
-                group relative flex flex-col rounded-2xl bg-[#0F0F11] border transition-all duration-300
-                ${selected ? "border-blue-500/50 shadow-[0_4px_30px_rgba(59,130,246,0.15)] ring-1 ring-blue-500/20" : "border-neutral-800/60 shadow-xl hover:border-neutral-700/80"}
-                text-sm overflow-hidden
+                group relative flex flex-col rounded-2xl bg-[#1C1C24]/90 backdrop-blur-xl border transition-all duration-300
+                ${selected ? "border-indigo-500/50 shadow-[0_8px_30px_rgba(79,70,229,0.2)] ring-1 ring-indigo-500/30" : "border-white/5 shadow-2xl hover:border-white/10"}
+                text-sm transform hover:-translate-y-1
+                ${isRunning ? "ring-2 ring-indigo-400/80 shadow-[0_0_40px_rgba(99,102,241,0.3)] border-indigo-500/50" : ""}
+                ${isError ? "ring-1 ring-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.15)] border-red-500/30" : ""}
             `}
                 style={{
                     width: node?.width ?? 320,
                     height: node?.height ?? 'auto',
                 }}
             >
+                {/* Status conic gradient active state */}
+                {isRunning && (
+                    <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-indigo-500 to-transparent animate-[pulse_1.5s_ease-in-out_infinite]" />
+                )}
                 {/* Header section */}
-                <div className="react-flow__node-drag-handle flex items-center justify-between px-4 py-3 border-b border-neutral-800/50 bg-[#161618] cursor-grab active:cursor-grabbing">
+                <div className="react-flow__node-drag-handle flex items-center justify-between px-4 py-3 border-b border-white/5 bg-transparent cursor-grab active:cursor-grabbing">
                     <div className="flex items-center gap-2">
-                        <NodeStatusBadge status={status} />
-                        <span className="text-[11px] font-semibold tracking-wide text-neutral-300">
+                        <NodeStatusBadge status={executionStatus?.status || status} />
+                        <span className="text-xs font-bold tracking-wider text-neutral-200 uppercase">
                             {title}
                         </span>
                     </div>
 
-                    <div className="flex items-center gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
-                                setIsInfoModalOpen(true);
+                                handleReExecute();
                             }}
-                            className="nodrag p-1.5 rounded-md hover:bg-white/10 text-neutral-400 hover:text-white transition-all transform hover:scale-105"
-                            title="Node Details & Edit"
+                            className="nodrag p-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 hover:text-white transition-all transform hover:scale-105 border border-indigo-500/20"
+                            title="Quick Run Node"
                         >
-                            <Info size={14} />
+                            <Play size={12} className="fill-current" />
                         </button>
                     </div>
                 </div>
 
                 {/* Body Content */}
-                <div className="p-4 space-y-4 flex flex-col flex-1 min-h-0 relative bg-gradient-to-b from-transparent to-[#0A0A0A]/50">
+                <div className="p-4 space-y-4 flex flex-col flex-1 min-h-0 relative">
                     <div className="flex-none">
                         {children}
                     </div>
 
                     {!hideDefaultResult && <ExecutionResult id={id} nodeHeight={node?.height} />}
                 </div>
-            </div>
-
-            <NodeInfoModal
-                isOpen={isInfoModalOpen}
-                onClose={() => setIsInfoModalOpen(false)}
-                title={title}
-                data={debugData}
-                onReExecute={handleReExecute}
-            />
+            </div >
 
             {selected && (
-                <div className="nodrag absolute -bottom-14 left-1/2 -translate-x-1/2 flex items-center gap-1 p-1 bg-[#1A1A1A] rounded-xl border border-neutral-800/80 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2">
+                <div className="nodrag absolute -bottom-14 left-1/2 -translate-x-1/2 flex items-center gap-1 p-1 bg-[#1C1C24] rounded-xl border border-white/10 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2">
                     <ToolbarButton icon={<Trash2 size={14} />} onClick={() => deleteNode(id)} danger />
                 </div>
-            )}
+            )
+            }
         </>
     );
 }
@@ -180,10 +177,10 @@ function ExecutionResult({ id, nodeHeight }: { id: string, nodeHeight?: number }
 
     return (
         <div className="flex flex-col flex-1 min-h-0 mt-2">
-            <div className="text-[10px] font-semibold text-neutral-500 mb-2 uppercase tracking-wider flex justify-between items-center">
+            <div className={`text-[10px] font-bold text-neutral-500 mb-2 uppercase tracking-wider flex justify-between items-center`}>
                 <span>Output</span>
                 {isTruncated && !shouldExpand && (
-                    <button onClick={() => setIsExpanded(true)} className="nodrag text-blue-400 hover:text-blue-300 normal-case tracking-normal hover:underline">
+                    <button onClick={() => setIsExpanded(true)} className="nodrag text-indigo-400 hover:text-indigo-300 normal-case tracking-normal hover:underline">
                         Expand
                     </button>
                 )}
@@ -194,7 +191,7 @@ function ExecutionResult({ id, nodeHeight }: { id: string, nodeHeight?: number }
                 )}
             </div>
 
-            <div className={`bg-[#0A0A0A] rounded-xl border border-neutral-800/60 overflow-hidden flex flex-col relative ${shouldExpand ? 'flex-1 min-h-0' : ''}`}>
+            <div className={`bg-black/40 rounded-xl border border-white/5 overflow-hidden flex flex-col relative ${shouldExpand ? 'flex-1 min-h-0' : ''}`}>
                 {output.image ? (
                     <div className="relative aspect-video w-full bg-black/50">
                         {/* eslint-disable-next-line @next/next/no-img-element */}

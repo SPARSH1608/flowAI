@@ -88,7 +88,14 @@ export const ImageGenerationExecutor: NodeExecutor = {
                 })),
                 debugInfo: {
                     receivedInputs: inputs,
-                    usedConfig: config,
+                    usedConfig: {
+                        model: config.model,
+                        prompt: config.prompt,
+                        width: config.width || config.size?.width,
+                        height: config.height || config.size?.height,
+                        strength: config.strength,
+                        customModel: config.customModel,
+                    },
                     intent: finalState.intent,
                     visualPlan: finalState.visualPlan,
                     finalPrompt: finalState.finalPrompt

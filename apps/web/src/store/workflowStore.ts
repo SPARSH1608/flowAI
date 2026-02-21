@@ -10,6 +10,14 @@ interface WorkflowState {
         name: string;
         description?: string;
     };
+    executions: any[];
+
+    nodeExecutionStatus: Record<string, { status: "idle" | "running" | "completed" | "error" }>;
+    setNodeExecutionStatus: (nodeId: string, status: "idle" | "running" | "completed" | "error") => void;
+    clearNodeExecutionStatus: () => void;
+
+    selectedNodeId: string | null;
+    setSelectedNodeId: (id: string | null) => void;
 
     addNode: (node: WorkflowNode) => void;
     setNodes: (nodes: WorkflowNode[] | ((prev: WorkflowNode[]) => WorkflowNode[])) => void;
@@ -21,7 +29,8 @@ interface WorkflowState {
     hydrate: () => void;
     executionResults: Record<string, any>;
     setExecutionResults: (results: Record<string, any>) => void;
-    setWorkflow: (workflow: { nodes: WorkflowNode[]; edges: WorkflowEdge[]; executionResults?: Record<string, any>; metadata?: { name: string; description?: string } }) => void;
+    addExecution: (execution: any) => void;
+    setWorkflow: (workflow: { nodes: WorkflowNode[]; edges: WorkflowEdge[]; executionResults?: Record<string, any>; metadata?: { name: string; description?: string }; executions?: any[] }) => void;
     setMetadata: (metadata: { name: string; description?: string }) => void;
     updateNodeData: (id: string, dataParams: any) => void;
 }
@@ -30,10 +39,23 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     nodes: [],
     edges: [],
     metadata: { name: "Untitled Workflow" },
+    executions: [],
     deleteMode: false,
     executionResults: {},
+    nodeExecutionStatus: {},
+    selectedNodeId: null,
+
+    setSelectedNodeId: (id) => set({ selectedNodeId: id }),
+
+    setNodeExecutionStatus: (nodeId, status) => set((state) => ({
+        nodeExecutionStatus: { ...state.nodeExecutionStatus, [nodeId]: { status } }
+    })),
+
+    clearNodeExecutionStatus: () => set({ nodeExecutionStatus: {} }),
 
     setExecutionResults: (results) => set({ executionResults: results }),
+
+    addExecution: (execution) => set((state) => ({ executions: [execution, ...state.executions] })),
 
     setWorkflow: (workflow) =>
         set({
@@ -41,6 +63,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
             edges: workflow.edges || [],
             executionResults: workflow.executionResults || {},
             metadata: workflow.metadata || { name: "Untitled Workflow" },
+            executions: workflow.executions || [],
         }),
 
     setMetadata: (metadata) => set({ metadata }),

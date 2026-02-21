@@ -3,4 +3,6 @@ export type NodeStatus =
     | "configured"
     | "error"
     | "disabled"
-    | "executing";
+    | "executing"
+    | "running"
+    | "completed";

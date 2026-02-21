@@ -9,6 +9,7 @@ import {
     getWorkflows,
 } from "../services/workflow.service";
 import { executeWorkflow } from "../services/executor.service";
+import { prisma } from "../db/prisma";
 
 export async function createWorkflow(
     req: Request,
@@ -107,6 +108,17 @@ export async function executeWorkflowController(
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
 
+        let executionId: string | undefined;
+        if (workflowDefinition.workflowId) {
+            const execution = await prisma.execution.create({
+                data: {
+                    workflowId: workflowDefinition.workflowId,
+                    status: "RUNNING"
+                }
+            });
+            executionId = execution.id;
+        }
+
         // Pass the workflow in the format the executor expects
         const result = await executeWorkflow({
             nodes,
@@ -119,10 +131,26 @@ export async function executeWorkflowController(
             res.write(JSON.stringify({ type: 'node_complete', nodeId, output }) + '\n');
             // If response has a flush method (common in compression middleware), use it
             if ((res as any).flush) (res as any).flush();
+        }, (nodeId) => {
+            console.log(`[executeWorkflowController] Node ${nodeId} started, streaming...`);
+            res.write(JSON.stringify({ type: 'node_start', nodeId }) + '\n');
+            if ((res as any).flush) (res as any).flush();
         });
 
         console.log("[executeWorkflowController] Workflow complete, sending final result");
-        res.write(JSON.stringify({ type: 'final_result', success: true, result }) + '\n');
+
+        let finalExecution: any;
+        if (executionId) {
+            finalExecution = await prisma.execution.update({
+                where: { id: executionId },
+                data: {
+                    status: (result as any).errors?.length ? "FAILED" : "COMPLETED",
+                    result: result as any,
+                    completedAt: new Date()
+                }
+            });
+        }
+        res.write(JSON.stringify({ type: 'final_result', success: true, result, execution: finalExecution }) + '\n');
         res.end();
     } catch (error: any) {
         console.error("Workflow execution error:", error);

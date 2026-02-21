@@ -53,7 +53,11 @@ export async function createWorkflow(definition: any) {
     return response.json();
 }
 
-export async function executeWorkflow(definition: any, onPartialUpdate?: (results: Record<string, any>) => void) {
+export async function executeWorkflow(
+    definition: any,
+    onPartialUpdate?: (results: Record<string, any>) => void,
+    onNodeStart?: (nodeId: string) => void
+) {
     const response = await fetch(`http://localhost:3002/workflows/execute`, {
         method: "POST",
         headers: {
@@ -87,7 +91,11 @@ export async function executeWorkflow(definition: any, onPartialUpdate?: (result
             console.log("[executeWorkflow] Stream chunk received:", line);
             try {
                 const data = JSON.parse(line);
-                if (data.type === 'node_complete') {
+                if (data.type === 'node_start') {
+                    if (onNodeStart) {
+                        onNodeStart(data.nodeId);
+                    }
+                } else if (data.type === 'node_complete') {
                     partialResults = {
                         ...partialResults,
                         [data.nodeId]: data.output
@@ -106,7 +114,7 @@ export async function executeWorkflow(definition: any, onPartialUpdate?: (result
                             }
                         }
                     }
-                    return { success: data.success, result: { nodeOutputs: partialResults, errors, raw: data.result } };
+                    return { success: data.success, result: { nodeOutputs: partialResults, errors, raw: data.result }, execution: data.execution };
                 }
             } catch (e) {
                 console.error("Failed to parse stream line:", line, e);

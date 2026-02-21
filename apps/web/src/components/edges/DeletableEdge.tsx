@@ -38,8 +38,12 @@ export default function DeletableEdge({
                 path={edgePath}
                 markerEnd={markerEnd}
                 style={{
-                    strokeWidth: 3,
+                    strokeWidth: 2,
+                    strokeDasharray: '5 5',
+                    animation: 'flow 20s linear infinite',
                     ...style,
+                    opacity: selected ? 1 : 0.6,
+                    stroke: selected ? '#818CF8' : style.stroke || '#555',
                 }}
             />
             {selected && (

@@ -6,34 +6,16 @@ import ExternalPort from "../ports/ExternalPort";
 import { useWorkflowStore } from "@/store/workflowStore";
 import { serializeWorkflow } from "@/utils/serializeWorkflow";
 import { executeWorkflow } from "@/utils/workflow";
-import { Play, Maximize2, RefreshCcw, Layers } from "lucide-react";
+import { Maximize2, RefreshCcw, Layers, Settings2 } from "lucide-react";
 import { useParams } from "next/navigation";
 
 export default function UpscaleNode({ data, selected, id }: NodeProps) {
     const params = useParams();
-    const config = data.config;
-    const setNodes = useWorkflowStore((s) => s.setNodes);
+    const updateNodeData = useWorkflowStore((s) => s.updateNodeData);
+    const setSelectedNodeId = useWorkflowStore((s) => s.setSelectedNodeId);
+
     const executionResult = useWorkflowStore((s) => s.executionResults?.[id]);
     const setExecutionResults = useWorkflowStore((s) => s.setExecutionResults);
-
-    const updateConfig = (key: string, value: any) => {
-        setNodes((nodes: any[]) =>
-            nodes.map((node) => {
-                if (node.id === id) {
-                    return {
-                        ...node,
-                        data: {
-                            ...node.data,
-                            config: { ...node.data.config, [key]: value },
-                        },
-                    };
-                }
-                return node;
-            })
-        );
-    };
-
-    const updateNodeData = useWorkflowStore((s) => s.updateNodeData);
 
     const handleRun = async () => {
         try {
@@ -69,45 +51,37 @@ export default function UpscaleNode({ data, selected, id }: NodeProps) {
             <ExternalPort direction="out" type="image" position={Position.Right} style={{ top: "50%" }} />
 
             <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] uppercase text-neutral-500 font-bold tracking-wider">Model</label>
-                        <select
-                            className="nodrag w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2 text-xs text-neutral-300 focus:outline-none focus:border-blue-500/50"
-                            value={config.model || "fal-ai/ccsr"}
-                            onChange={(e) => updateConfig("model", e.target.value)}
-                        >
-                            <option value="fal-ai/ccsr">Fal CCSR (Default)</option>
-                            <option value="fal-ai/clarity-upscaler">Clarity Upscaler</option>
-                            <option value="fal-ai/fotor-upscale">Fotor Upscale</option>
-                            <option value="fal-ai/esrgan">ESRGAN (Fast)</option>
-                        </select>
-                    </div>
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] uppercase text-neutral-500 font-bold tracking-wider">Factor</label>
-                        <select
-                            className="nodrag w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2 text-xs text-neutral-300 focus:outline-none focus:border-blue-500/50"
-                            value={config.factor || 2}
-                            onChange={(e) => updateConfig("factor", parseInt(e.target.value))}
-                        >
-                            <option value={2}>2x</option>
-                            <option value={4}>4x</option>
-                        </select>
-                    </div>
-                </div>
-
-                {resultImage && (
-                    <div className="relative aspect-video rounded-xl overflow-hidden border border-neutral-800 bg-black/40 group">
+                {resultImage ? (
+                    <div className="relative aspect-video rounded-xl overflow-hidden border border-white/5 bg-black/40 group">
                         <img
                             src={typeof resultImage === 'string' ? resultImage : resultImage.url}
                             alt="Upscaled"
                             className="w-full h-full object-contain"
                         />
                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                            <span className="text-[10px] text-white font-medium bg-blue-600 px-2 py-1 rounded-full flex items-center gap-1">
+                            <span className="text-[10px] text-white font-medium bg-indigo-600 px-2 py-1 rounded-full flex items-center gap-1 shadow-lg shadow-indigo-900/50">
                                 <Maximize2 size={10} /> Upscaled
                             </span>
                         </div>
+                    </div>
+                ) : (
+                    <div className="flex flex-col items-center justify-center py-6 px-4 text-center border border-dashed border-white/10 rounded-xl bg-black/20">
+                        <div className="w-8 h-8 rounded-full bg-indigo-500/10 flex items-center justify-center mb-2">
+                            <Settings2 className="text-indigo-400" size={14} />
+                        </div>
+                        <h3 className="text-xs font-semibold text-neutral-200 mb-1">Configure Upscaler</h3>
+                        <p className="text-[10px] text-neutral-500 max-w-[160px] mb-3">
+                            Select node to change model or upscale factor.
+                        </p>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedNodeId(id);
+                            }}
+                            className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-medium text-neutral-300 transition-colors"
+                        >
+                            Open Inspector
+                        </button>
                     </div>
                 )}
 
@@ -117,10 +91,10 @@ export default function UpscaleNode({ data, selected, id }: NodeProps) {
                         handleRun();
                     }}
                     disabled={data.status === "executing"}
-                    className="nodrag w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2.5 rounded-xl text-xs font-semibold shadow-lg shadow-blue-900/20 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                    className="nodrag w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2 rounded-xl text-xs font-semibold shadow-[0_4px_20px_rgba(79,70,229,0.2)] transition-all transform hover:scale-[1.02] active:scale-[0.98] border border-white/10"
                 >
                     {resultImage ? <RefreshCcw size={14} /> : <Layers size={14} />}
-                    {data.status === "executing" ? "Upscaling..." : resultImage ? "Upscale Again" : "Execute Upscale"}
+                    {data.status === "executing" ? "Processing..." : resultImage ? "Upscale Again" : "Run Upscale"}
                 </button>
             </div>
         </BaseNode>

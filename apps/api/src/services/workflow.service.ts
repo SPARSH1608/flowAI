@@ -14,7 +14,10 @@ export async function saveWorkflow(
                 y: 0,
                 zoom: 1
             },
-            definition: input.canvas as any,
+            definition: {
+                ...input.canvas,
+                executionResults: input.executionResults,
+            } as any,
         },
     });
 }
@@ -29,7 +32,10 @@ export async function updateWorkflow(
             name: input.metadata.name,
             description: input.metadata.description,
             version: input.version,
-            definition: input.canvas as any,
+            definition: {
+                ...input.canvas,
+                executionResults: input.executionResults,
+            } as any,
         },
     });
 }

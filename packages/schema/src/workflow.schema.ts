@@ -36,6 +36,7 @@ export const SerializedWorkflowSchema = z.object({
         nodes: z.array(WorkflowNodeSchema),
         edges: z.array(WorkflowEdgeSchema),
     }),
+    executionResults: z.any().optional(),
 });
 
 export type SerializedWorkflow = z.infer<

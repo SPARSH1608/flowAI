@@ -11,6 +11,9 @@ export function buildLangGraph(
         edges: any[];
         targetNodeId?: string;
         executionResults?: Record<string, any>;
+    },
+    callbacks?: {
+        onNodeStart?: (nodeId: string) => void;
     }
 ) {
     let executionOrder = compiled.executionOrder;
@@ -79,6 +82,9 @@ export function buildLangGraph(
         }
 
         graph.addNode(nodeId, async (state) => {
+            if (callbacks?.onNodeStart) {
+                callbacks.onNodeStart(nodeId);
+            }
             try {
                 const inputs = resolveInputs(
                     nodeId,

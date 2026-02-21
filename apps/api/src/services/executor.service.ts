@@ -1,7 +1,11 @@
 import { compileWorkflow } from "@repo/compiler";
 import { buildLangGraph } from "@repo/runtime";
 
-export async function executeWorkflow(definition: any, onNodeComplete?: (nodeId: string, output: any) => void) {
+export async function executeWorkflow(
+    definition: any,
+    onNodeComplete?: (nodeId: string, output: any) => void,
+    onNodeStart?: (nodeId: string) => void
+) {
     try {
         console.log("Compiling workflow with", definition.nodes?.length || 0, "nodes");
 
@@ -13,6 +17,8 @@ export async function executeWorkflow(definition: any, onNodeComplete?: (nodeId:
             edges: definition.edges || [],
             targetNodeId: definition.targetNodeId,
             executionResults: definition.executionResults,
+        }, {
+            onNodeStart
         });
         console.log("Graph built successfully");
 

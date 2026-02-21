@@ -69,17 +69,14 @@ export default function AssistantNode({ data, selected, id }: NodeProps) {
             <ExternalPort direction="out" type="text" position={Position.Right} style={{ top: "50%" }} />
 
             <div className="space-y-4">
-                {(!executionResult?.text || selected) && (
-                    <div className="animate-in fade-in slide-in-from-top-2 duration-200">
-                        <label className="text-[10px] uppercase text-neutral-500 font-bold mb-1.5 block tracking-wider">
-                            Assistant Directives
-                        </label>
-                        <textarea
-                            className="nodrag w-full h-20 bg-[#111113] border border-neutral-800/80 rounded-xl p-3 text-neutral-300 text-[13px] focus:outline-none focus:border-blue-500/50 resize-none transition-all placeholder:text-neutral-600 custom-scrollbar shadow-inner"
-                            placeholder="e.g. Make it more cinematic, focus on urban lighting..."
-                            value={config.instructions || ""}
-                            onChange={(e) => updateConfig("instructions", e.target.value)}
-                        />
+                {config.instructions && (
+                    <div className="px-3 py-2 bg-[#161618] rounded-lg border border-white/5 flex flex-col gap-1">
+                        <span className="text-[10px] uppercase text-neutral-500 font-bold tracking-wider">
+                            Directives
+                        </span>
+                        <span className="text-xs text-neutral-300 italic line-clamp-2 leading-relaxed">
+                            "{config.instructions}"
+                        </span>
                     </div>
                 )}
 
