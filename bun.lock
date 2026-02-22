@@ -110,8 +110,10 @@
     },
     "packages/executor": {
       "name": "@repo/executor",
+      "dependencies": {
+        "@repo/schema": "*",
+      },
       "devDependencies": {
-        "@repo/runtime": "*",
         "@repo/typescript-config": "*",
         "@types/bun": "latest",
       },
@@ -125,8 +127,10 @@
         "@langchain/core": "^1.1.18",
         "@langchain/langgraph": "^1.1.2",
         "@repo/executor": "*",
+        "@repo/schema": "*",
       },
       "devDependencies": {
+        "@repo/schema": "*",
         "@repo/typescript-config": "*",
         "@types/bun": "latest",
       },

@@ -28,8 +28,9 @@ COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=builder /app/apps/api/src/generated ./apps/api/src/generated
 COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
 COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
+COPY --from=builder /app/apps/api/prisma.config.js ./apps/api/prisma.config.js
 COPY --from=builder /app/apps/api/src ./apps/api/src
-
+COPY --from=builder /app/packages ./packages
 # Set environment variables
 ENV NODE_ENV=production
 EXPOSE 3002

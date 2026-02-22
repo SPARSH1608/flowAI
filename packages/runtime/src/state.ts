@@ -1,16 +1,6 @@
-export interface ExecutionState {
-    // Outputs per node
-    nodeOutputs: Record<
-        string,
-        Record<string, any> // portType → value
-    >;
+import { ExecutionState } from "@repo/schema";
+export { type ExecutionState };
 
-    // Errors
-    errors: Array<{
-        nodeId: string;
-        error: string;
-    }>;
-}
 export const initialState: ExecutionState = {
     nodeOutputs: {},
     errors: [],

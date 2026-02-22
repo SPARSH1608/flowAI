@@ -1,4 +1,4 @@
-import { ExecutionState } from "@repo/runtime";
+import { ExecutionState } from "@repo/schema";
 
 export interface NodeExecutor {
     execute(

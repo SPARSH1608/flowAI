@@ -5,8 +5,10 @@
   "private": true,
   "devDependencies": {
     "@repo/typescript-config": "*",
-    "@types/bun": "latest",
-    "@repo/runtime": "*"
+    "@types/bun": "latest"
+  },
+  "dependencies": {
+    "@repo/schema": "*"
   },
   "peerDependencies": {
     "typescript": "^5"

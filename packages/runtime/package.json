@@ -5,7 +5,8 @@
   "private": true,
   "devDependencies": {
     "@repo/typescript-config": "*",
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@repo/schema": "*"
   },
   "exports": {
     ".": "./index.ts"
@@ -16,6 +17,7 @@
   "dependencies": {
     "@langchain/core": "^1.1.18",
     "@langchain/langgraph": "^1.1.2",
-    "@repo/executor": "*"
+    "@repo/executor": "*",
+    "@repo/schema": "*"
   }
 }
