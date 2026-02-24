@@ -38,8 +38,8 @@ export default function TextNode({ data, selected, id }: NodeProps) {
                 type="text"
                 position={Position.Right}
             />
-            <div className="px-3 py-1 bg-[#161618] rounded-lg border border-white/5 mx-1 flex items-center justify-between">
-                <span className="text-xs text-neutral-400 font-medium truncate max-w-[200px]">
+            <div className="px-3 py-1 bg-neutral-50 rounded-lg border border-neutral-200 mx-1 flex items-center justify-between">
+                <span className="text-xs text-neutral-600 font-medium truncate max-w-[200px]">
                     {nodeData.config?.text ? `"${nodeData.config.text}"` : "Empty text block"}
                 </span>
             </div>

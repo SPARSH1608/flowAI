@@ -19,8 +19,11 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
     const setExecutionResults = useWorkflowStore((s) => s.setExecutionResults);
     const addExecution = useWorkflowStore((s) => s.addExecution);
     const setNodeExecutionStatus = useWorkflowStore((s) => s.setNodeExecutionStatus);
+    const clearExecutionLogs = useWorkflowStore((s) => s.clearExecutionLogs);
+    const addExecutionLog = useWorkflowStore((s) => s.addExecutionLog);
 
-    console.log(`ImageGenerationNode [${id}] render. Result key:`, executionResult);
+    console.log(`[ImageGenerationNode:${id}] Rendered. executionResults present:`, !!useWorkflowStore.getState().executionResults);
+    console.log(`[ImageGenerationNode:${id}] My result:`, executionResult);
 
     const rawResult = executionResult?.['image[]']?.[0] || executionResult?.image;
     let resultImage = typeof rawResult === 'string' ? rawResult : rawResult?.url;
@@ -36,6 +39,7 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
         console.log("Run/Regenerate clicked for node:", id);
         try {
             updateNodeData(id, { status: "executing" });
+            clearExecutionLogs(id);
             console.log("ImageGenerationNode: workflowId from params:", params?.id);
             const workflow = {
                 ...serializeWorkflow(),
@@ -47,6 +51,8 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
                 setExecutionResults(partialResults);
             }, (nId) => {
                 setNodeExecutionStatus(nId, "running");
+            }, (nId, message) => {
+                addExecutionLog(nId, message);
             }, token as any);
 
             if (result.success && result.result) {
@@ -104,11 +110,11 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
     };
 
     const renderEmptyState = () => (
-        <div className="flex flex-col items-center justify-center py-8 px-4 text-center border border-dashed border-white/10 rounded-xl bg-black/20">
+        <div className="flex flex-col items-center justify-center py-8 px-4 text-center border border-dashed border-neutral-200 rounded-xl bg-neutral-50">
             <div className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center mb-3">
                 <Settings2 className="text-indigo-400" size={18} />
             </div>
-            <h3 className="text-sm font-semibold text-neutral-200 mb-1">Configure Node</h3>
+            <h3 className="text-sm font-semibold text-neutral-900 mb-1">Configure Node</h3>
             <p className="text-xs text-neutral-500 max-w-[200px] mb-4">
                 Select this node to set up prompts and model parameters in the Inspector.
             </p>
@@ -117,7 +123,7 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
                     e.stopPropagation();
                     setSelectedNodeId(id);
                 }}
-                className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-medium text-neutral-300 transition-colors"
+                className="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 border border-neutral-200 rounded-lg text-xs font-medium text-neutral-700 transition-colors"
             >
                 Open Inspector
             </button>
@@ -139,7 +145,7 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
 
             {resultImage ? (
                 <div className="space-y-4">
-                    <div className="relative w-full aspect-square min-h-[300px] group rounded-lg overflow-hidden bg-black border border-neutral-800">
+                    <div className="relative w-full aspect-square min-h-[300px] group rounded-lg overflow-hidden bg-black border border-neutral-200">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             src={resultImage}
@@ -209,7 +215,7 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
                             </button>
                         </div>
 
-                        <div className="absolute top-2 left-2 bg-black/50 text-white/80 text-[10px] px-2 py-0.5 rounded-full border border-white/10 pointer-events-none">
+                        <div className="absolute top-2 left-2 bg-black/50 text-white/80 text-[10px] px-2 py-0.5 rounded-full border border-neutral-200 pointer-events-none">
                             {config.size?.width || 1024} × {config.size?.height || 1024}
                         </div>
                     </div>

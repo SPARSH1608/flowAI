@@ -25,6 +25,7 @@ export async function compilerNode(
 
     finalPrompt += " Not a plain photograph. This is a designed advertisement with intentional layout and composition.";
 
+    console.log("[SSE:final_prompt]", finalPrompt);
     return { finalPrompt };
 }
 

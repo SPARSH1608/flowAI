@@ -9,6 +9,7 @@ import { serializeWorkflow } from "@/utils/serializeWorkflow";
 import { executeWorkflow } from "@/utils/workflow";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { normalizeUrl } from "@/utils/images";
 
 interface BaseNodeProps {
     id: string;
@@ -88,8 +89,8 @@ export default function BaseNode({
             />
 
             <div className={`
-                group relative flex flex-col rounded-2xl bg-[#1C1C24]/90 backdrop-blur-xl border transition-all duration-300
-                ${selected ? "border-indigo-500/50 shadow-[0_8px_30px_rgba(79,70,229,0.2)] ring-1 ring-indigo-500/30" : "border-white/5 shadow-2xl hover:border-white/10"}
+                group relative flex flex-col rounded-2xl bg-white/90 backdrop-blur-xl border transition-all duration-300
+                ${selected ? "border-neutral-400 shadow-md ring-1 ring-neutral-300" : "border-neutral-200 shadow-sm hover:border-neutral-300"}
                 text-sm transform hover:-translate-y-1
                 ${isRunning ? "ring-2 ring-indigo-400/80 shadow-[0_0_40px_rgba(99,102,241,0.3)] border-indigo-500/50" : ""}
                 ${isError ? "ring-1 ring-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.15)] border-red-500/30" : ""}
@@ -104,10 +105,10 @@ export default function BaseNode({
                     <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-indigo-500 to-transparent animate-[pulse_1.5s_ease-in-out_infinite]" />
                 )}
                 {/* Header section */}
-                <div className="react-flow__node-drag-handle flex items-center justify-between px-4 py-3 border-b border-white/5 bg-transparent cursor-grab active:cursor-grabbing">
+                <div className="react-flow__node-drag-handle flex items-center justify-between px-4 py-3 border-b border-neutral-200 bg-transparent cursor-grab active:cursor-grabbing">
                     <div className="flex items-center gap-2">
                         <NodeStatusBadge status={executionStatus?.status || status} />
-                        <span className="text-xs font-bold tracking-wider text-neutral-200 uppercase">
+                        <span className="text-xs font-bold tracking-wider text-neutral-900 uppercase">
                             {title}
                         </span>
                     </div>
@@ -137,7 +138,7 @@ export default function BaseNode({
             </div >
 
             {selected && (
-                <div className="nodrag absolute -bottom-14 left-1/2 -translate-x-1/2 flex items-center gap-1 p-1 bg-[#1C1C24] rounded-xl border border-white/10 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2">
+                <div className="nodrag absolute -bottom-14 left-1/2 -translate-x-1/2 flex items-center gap-1 p-1 bg-white rounded-xl border border-neutral-200 shadow-sm z-50 animate-in fade-in slide-in-from-top-2">
                     <ToolbarButton icon={<Trash2 size={14} />} onClick={() => deleteNode(id)} danger />
                 </div>
             )
@@ -150,7 +151,7 @@ function ToolbarButton({ icon, onClick, danger }: { icon: React.ReactNode; onCli
     return (
         <button
             onClick={onClick}
-            className={`p-2 rounded-md transition-colors ${danger ? 'text-red-400 hover:bg-red-500/10 hover:text-red-300' : 'text-neutral-400 hover:bg-neutral-700 hover:text-white'}`}
+            className={`p-2 rounded-md transition-colors ${danger ? 'text-red-400 hover:bg-red-500/10 hover:text-red-300' : 'text-neutral-600 hover:bg-neutral-700 hover:text-white'}`}
         >
             {icon}
         </button>
@@ -187,29 +188,29 @@ function ExecutionResult({ id, nodeHeight }: { id: string, nodeHeight?: number }
                     </button>
                 )}
                 {isExpanded && !nodeHeight && (
-                    <button onClick={() => setIsExpanded(false)} className="nodrag text-neutral-400 hover:text-neutral-300 normal-case tracking-normal hover:underline">
+                    <button onClick={() => setIsExpanded(false)} className="nodrag text-neutral-600 hover:text-neutral-700 normal-case tracking-normal hover:underline">
                         Collapse
                     </button>
                 )}
             </div>
 
-            <div className={`bg-black/40 rounded-xl border border-white/5 overflow-hidden flex flex-col relative ${shouldExpand ? 'flex-1 min-h-0' : ''}`}>
+            <div className={`bg-black/40 rounded-xl border border-neutral-200 overflow-hidden flex flex-col relative ${shouldExpand ? 'flex-1 min-h-0' : ''}`}>
                 {output.image ? (
                     <div className="relative aspect-video w-full bg-black/50">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                            src={output.image}
+                            src={normalizeUrl(process.env.NEXT_PUBLIC_API_URL, output.image)}
                             alt="Output"
                             className="w-full h-full object-contain"
                         />
                     </div>
                 ) : output['image[]'] && Array.isArray(output['image[]']) ? (
-                    <div className="grid grid-cols-2 gap-0.5 bg-neutral-900 border-b border-neutral-800">
+                    <div className="grid grid-cols-2 gap-0.5 bg-neutral-900 border-b border-neutral-200">
                         {output['image[]'].map((img: string, i: number) => (
                             <div key={i} className="relative aspect-square w-full bg-black">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
-                                    src={img}
+                                    src={normalizeUrl(process.env.NEXT_PUBLIC_API_URL, img)}
                                     alt={`Output ${i}`}
                                     className="w-full h-full object-cover"
                                 />
@@ -220,7 +221,7 @@ function ExecutionResult({ id, nodeHeight }: { id: string, nodeHeight?: number }
                     <>
                         <div
                             ref={textRef}
-                            className={`p-3 text-[13px] leading-relaxed text-neutral-300 break-words ${shouldExpand ? 'overflow-y-auto custom-scrollbar flex-1' : 'line-clamp-4'}`}
+                            className={`p-3 text-[13px] leading-relaxed text-neutral-700 break-words ${shouldExpand ? 'overflow-y-auto custom-scrollbar flex-1' : 'line-clamp-4'}`}
                         >
                             {output.text}
                         </div>
@@ -230,7 +231,7 @@ function ExecutionResult({ id, nodeHeight }: { id: string, nodeHeight?: number }
                     </>
                 ) : (
                     <pre
-                        className="p-3 text-[11px] font-mono whitespace-pre-wrap text-neutral-400 overflow-auto custom-scrollbar flex-1"
+                        className="p-3 text-[11px] font-mono whitespace-pre-wrap text-neutral-600 overflow-auto custom-scrollbar flex-1"
                         style={{ maxHeight: shouldExpand ? '100%' : '120px' }}
                     >
                         {JSON.stringify(output, null, 2)}

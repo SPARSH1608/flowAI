@@ -4,7 +4,7 @@ import { type NodeProps, Position } from "@xyflow/react";
 import BaseNode from "./BaseNode";
 import ExternalPort from "../ports/ExternalPort";
 import { useWorkflowStore } from "@/store/workflowStore";
-import { uploadImage } from "@/utils/images";
+import { uploadImage, normalizeUrl } from "@/utils/images";
 import { Upload, Loader2 } from "lucide-react";
 import { WorkflowNode } from "@/types/workflow";
 
@@ -87,12 +87,12 @@ export default function ImageNode({ data, id, selected }: NodeProps) {
 
             {config.url ? (
                 <img
-                    src={`${process.env.NEXT_PUBLIC_API_URL}${config.url}`}
+                    src={normalizeUrl(process.env.NEXT_PUBLIC_API_URL, config.url)}
                     alt="Uploaded"
-                    className="w-full h-32 object-cover rounded-md border border-neutral-700"
+                    className="w-full h-32 object-cover rounded-md border border-neutral-200"
                 />
             ) : (
-                <div className="h-32 bg-neutral-800 border border-neutral-700 rounded-md flex items-center justify-center text-xs text-neutral-400">
+                <div className="h-32 bg-neutral-100 border border-neutral-200 rounded-md flex items-center justify-center text-xs text-neutral-600">
                     {config.uploading ? (
                         <div className="flex items-center gap-2">
                             <Loader2 size={16} className="animate-spin" />

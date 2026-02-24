@@ -2,7 +2,7 @@
 @import "tailwindcss";
 
 .xy-flow__pane {
-  background-color: #0a0a0a;
+  background-color: #FAFAFA;
 }
 
 .delete-mode-active,

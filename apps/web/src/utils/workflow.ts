@@ -70,6 +70,7 @@ export async function executeWorkflow(
     definition: any,
     onPartialUpdate?: (results: Record<string, any>) => void,
     onNodeStart?: (nodeId: string) => void,
+    onLog?: (nodeId: string, message: string) => void,
     token?: string
 ) {
     const headers: Record<string, string> = {
@@ -105,10 +106,13 @@ export async function executeWorkflow(
 
         for (const line of lines) {
             if (!line.trim()) continue;
-            console.log("[executeWorkflow] Stream chunk received:", line);
             try {
                 const data = JSON.parse(line);
-                if (data.type === 'node_start') {
+                if (data.type === 'log') {
+                    if (onLog) {
+                        onLog(data.nodeId, data.message);
+                    }
+                } else if (data.type === 'node_start') {
                     if (onNodeStart) {
                         onNodeStart(data.nodeId);
                     }

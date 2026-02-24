@@ -54,6 +54,8 @@ export default function TopBar() {
                 setExecutionResults(partialResults);
             }, (nodeId) => {
                 console.log(`Node ${nodeId} started`);
+            }, (nodeId, message) => {
+                useWorkflowStore.getState().addExecutionLog(nodeId, message);
             }, token);
 
             console.log("Workflow execution result:", result);
@@ -94,17 +96,17 @@ export default function TopBar() {
     }
 
     return (
-        <div className="h-14 flex-none bg-[#0E0E14] border-b border-white/5 flex items-center justify-between px-6 z-50">
+        <div className="h-14 flex-none bg-white border-b border-neutral-200 flex items-center justify-between px-6 z-50 shadow-sm relative">
             <div className="flex items-center gap-4 w-1/3">
-                <Link href="/" className="text-neutral-500 hover:text-white transition-colors">
+                <Link href="/" className="text-neutral-500 hover:text-neutral-900 transition-colors">
                     <ChevronLeft size={18} />
                 </Link>
-                <div className="h-4 w-px bg-white/10" />
+                <div className="h-4 w-px bg-neutral-200" />
                 <div className="flex items-center gap-2 group cursor-pointer">
-                    <div className="w-6 h-6 rounded-md bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30">
-                        <Sparkles size={12} className="text-indigo-400" />
+                    <div className="w-6 h-6 rounded-md bg-neutral-100 flex items-center justify-center border border-neutral-200">
+                        <Sparkles size={12} className="text-neutral-600" />
                     </div>
-                    <span className="text-sm font-semibold text-neutral-200 tracking-wide group-hover:text-white transition-colors">
+                    <span className="text-sm font-semibold text-neutral-700 tracking-wide group-hover:text-neutral-900 transition-colors">
                         {useWorkflowStore.getState().metadata?.name || "Untitled Workflow"}
                     </span>
                 </div>
@@ -113,20 +115,20 @@ export default function TopBar() {
             <div className="flex items-center justify-center gap-2 w-1/3">
                 <button
                     onClick={loadTemplate}
-                    className="text-[11px] font-medium uppercase tracking-wider text-neutral-500 hover:text-white py-1.5 px-3 rounded-lg hover:bg-white/5 transition-all"
+                    className="text-[11px] font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-900 py-1.5 px-3 rounded-lg hover:bg-neutral-100 transition-all"
                 >
                     Load Template
                 </button>
-                <div className="h-3 w-px bg-white/10 mx-1" />
+                <div className="h-3 w-px bg-neutral-200 mx-1" />
                 <button
                     onClick={exportJSON}
-                    className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-neutral-500 hover:text-white py-1.5 px-3 rounded-lg hover:bg-white/5 transition-all"
+                    className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-900 py-1.5 px-3 rounded-lg hover:bg-neutral-100 transition-all"
                 >
                     <Download size={12} /> JSON
                 </button>
                 <button
                     onClick={exportSnapshot}
-                    className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-neutral-500 hover:text-white py-1.5 px-3 rounded-lg hover:bg-white/5 transition-all"
+                    className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-neutral-500 hover:text-neutral-900 py-1.5 px-3 rounded-lg hover:bg-neutral-100 transition-all"
                 >
                     <ImageIcon size={12} /> PNG
                 </button>
@@ -135,7 +137,7 @@ export default function TopBar() {
             <div className="flex items-center justify-end gap-3 w-1/3">
                 <button
                     onClick={handleSave}
-                    className="flex items-center gap-2 text-xs font-semibold text-neutral-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/5 px-4 py-2 rounded-xl transition-all"
+                    className="flex items-center gap-2 text-xs font-semibold text-neutral-700 hover:text-neutral-900 bg-white hover:bg-neutral-50 border border-neutral-200 px-4 py-2 rounded-xl transition-all shadow-sm"
                 >
                     <Save size={14} />
                     Save
@@ -144,7 +146,7 @@ export default function TopBar() {
                 <button
                     onClick={runWorkflow}
                     disabled={isRunning}
-                    className="flex items-center gap-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-600/50 disabled:cursor-not-allowed px-5 py-2 rounded-xl transition-all shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_25px_rgba(79,70,229,0.5)] transform hover:-translate-y-0.5"
+                    className="flex items-center gap-2 text-xs font-semibold text-white bg-[#171717] hover:bg-black disabled:bg-neutral-400 disabled:cursor-not-allowed px-5 py-2 rounded-xl transition-all shadow-sm transform hover:-translate-y-0.5"
                 >
                     {isRunning ? (
                         <>
@@ -159,7 +161,7 @@ export default function TopBar() {
                     )}
                 </button>
 
-                <div className="h-4 w-px bg-white/10 mx-1" />
+                <div className="h-4 w-px bg-neutral-200 mx-1" />
 
                 <UserMenu />
             </div>

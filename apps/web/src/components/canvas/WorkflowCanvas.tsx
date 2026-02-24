@@ -143,7 +143,7 @@ export default function WorkflowCanvas() {
 
     return (
         <div
-            className={`w-full h-full bg-[#0E0E14] ${deleteMode ? 'delete-mode-active' : ''}`}
+            className={`w-full h-full bg-[#FAFAFA] ${deleteMode ? 'delete-mode-active' : ''}`}
             onDrop={onDrop}
             onDragOver={onDragOver}
         >
@@ -175,9 +175,9 @@ export default function WorkflowCanvas() {
             >
                 <Background
                     gap={24}
-                    size={1}
-                    color="#ffffff"
-                    style={{ opacity: 0.05 }}
+                    size={1.5}
+                    color="#A3A3A3"
+                    style={{ opacity: 0.2 }}
                     variant={"dots" as any}
                 />
 

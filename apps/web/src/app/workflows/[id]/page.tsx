@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ReactFlowProvider } from "@xyflow/react";
 import { useWorkflowStore } from "@/store/workflowStore";
 import dynamic from "next/dynamic";
@@ -11,11 +11,13 @@ import RightInspector from "@/components/panels/RightInspector";
 import { useParams, useRouter } from "next/navigation";
 import { fetchWorkflow } from "@/utils/workflow";
 import { useAuth } from "@/context/AuthContext";
+import { Loader2 } from "lucide-react";
 
 export default function WorkflowPage() {
     const setWorkflow = useWorkflowStore((s) => s.setWorkflow);
     const params = useParams();
     const { token, loading } = useAuth();
+    const [workflowLoading, setWorkflowLoading] = useState(true);
     const router = useRouter();
 
     useEffect(() => {
@@ -26,6 +28,7 @@ export default function WorkflowPage() {
         }
         if (!params.id) return;
 
+        setWorkflowLoading(true);
         fetchWorkflow(params.id as string, token)
             .then((data) => {
                 const nodes = data.definition?.nodes || [];
@@ -54,11 +57,20 @@ export default function WorkflowPage() {
                     executions: data.executions || [],
                 });
             })
-            .catch((err) => console.error("Failed to load workflow:", err));
-    }, [params.id, setWorkflow]);
+            .catch((err) => console.error("Failed to load workflow:", err))
+            .finally(() => setWorkflowLoading(false));
+    }, [params.id, setWorkflow, loading, token, router]);
+
+    if (loading || workflowLoading) {
+        return (
+            <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center">
+                <Loader2 className="text-zinc-900 animate-spin" size={32} />
+            </div>
+        );
+    }
 
     return (
-        <div className="flex flex-col h-screen bg-[#0E0E14] text-neutral-300 overflow-hidden font-sans">
+        <div className="flex flex-col h-screen bg-[#FAFAFA] text-neutral-900 overflow-hidden font-sans">
             <TopBar />
 
             <main className="flex flex-1 h-[calc(100vh-60px)] relative overflow-hidden">
@@ -67,7 +79,7 @@ export default function WorkflowPage() {
                     <FloatingSidebar />
 
                     {/* Center Canvas */}
-                    <div className="flex-1 relative bg-[#0E0E14] border-x border-white/5">
+                    <div className="flex-1 relative bg-[#FAFAFA] border-x border-neutral-200">
                         <WorkflowCanvas />
                     </div>
 

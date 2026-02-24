@@ -10,6 +10,7 @@ import {
 } from "../services/workflow.service";
 import { executeWorkflow } from "../services/executor.service";
 import { prisma } from "../db/prisma";
+import { loggerContext } from "../utils/logger";
 
 export async function createWorkflow(
     req: Request,
@@ -38,25 +39,46 @@ export async function updateWorkflowController(
     res: Response
 ) {
     const { id } = req.params;
-    const parsed =
-        SerializedWorkflowSchema.safeParse(req.body);
-
-    if (!parsed.success) {
-        return res.status(400).json({
-            error: parsed.error.format(),
-        });
-    }
-
     const userId = (req as any).userId;
-    try {
-        const workflow = await updateWorkflow(id as string, parsed.data, userId);
-        res.json({
-            id: workflow.id,
-            message: "Workflow updated",
-        });
-    } catch (e) {
-        res.status(500).json({ error: "Failed to update workflow" });
+
+    // Try to validate as full workflow first
+    const fullParsed = SerializedWorkflowSchema.safeParse(req.body);
+
+    if (fullParsed.success) {
+        try {
+            const workflow = await updateWorkflow(id as string, fullParsed.data, userId);
+            return res.json({
+                id: workflow.id,
+                message: "Workflow updated",
+            });
+        } catch (e) {
+            return res.status(500).json({ error: "Failed to update workflow" });
+        }
     }
+
+    // Fallback: Partial update (usually from Dashboard for name/description)
+    const body = req.body;
+    console.log("Update fallback check. Body keys:", Object.keys(body));
+
+    if (body.metadata && (body.metadata.name || body.metadata.description !== undefined)) {
+        console.log("Processing partial metadata update...");
+        try {
+            const workflow = await updateWorkflow(id as string, body, userId);
+            return res.json({
+                id: workflow.id,
+                message: "Workflow updated (metadata)",
+            });
+        } catch (e) {
+            console.error("Partial update error:", e);
+            return res.status(500).json({ error: "Failed to update workflow metadata" });
+        }
+    }
+
+    console.warn("Update data didn't match full schema or fallback logic.");
+    return res.status(400).json({
+        error: "Invalid update data. Expected full workflow or metadata.",
+        details: fullParsed.error?.format()
+    });
 }
 
 export async function fetchWorkflow(
@@ -104,47 +126,72 @@ export async function executeWorkflowController(
 
         // Set headers for streaming
         res.setHeader('Content-Type', 'application/x-ndjson');
-        res.setHeader('Transfer-Encoding', 'chunked');
         res.setHeader('X-Content-Type-Options', 'nosniff');
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
+        res.setHeader('X-Accel-Buffering', 'no'); // Tell Nginx not to buffer
+
+        // Send an immediate heartbeat to "open" the stream
+        res.write(JSON.stringify({ type: 'processing_started', timestamp: new Date().toISOString() }) + '\n');
 
         let executionId: string | undefined;
         if (workflowDefinition.workflowId) {
-            const execution = await prisma.execution.create({
-                data: {
-                    workflowId: workflowDefinition.workflowId,
-                    status: "RUNNING"
-                }
-            });
-            executionId = execution.id;
+            console.log(`Creating execution record for workflow: ${workflowDefinition.workflowId}`);
+            try {
+                const execution = await prisma.execution.create({
+                    data: {
+                        workflowId: workflowDefinition.workflowId,
+                        status: "RUNNING"
+                    }
+                });
+                executionId = execution.id;
+                console.log(`Execution record created: ${executionId}`);
+            } catch (dbError) {
+                console.error("Failed to create execution record:", dbError);
+                // Continue execution even if DB logging fails
+            }
         }
 
+        const nodeOutputs: Record<string, any> = {};
         const result = await executeWorkflow({
             nodes,
             edges: edges || [],
             targetNodeId: workflowDefinition.targetNodeId,
             executionResults: workflowDefinition.executionResults,
+            wrapNodeExecution: (nodeId: string, executeFn: () => Promise<any>) => {
+                return loggerContext.run({
+                    onLog: (message: string) => {
+                        res.write(JSON.stringify({ type: 'log', nodeId, message }) + '\n');
+                    }
+                }, executeFn);
+            }
         }, (nodeId, output) => {
+            console.log(`Node complete: ${nodeId}`);
+            nodeOutputs[nodeId] = output;
             res.write(JSON.stringify({ type: 'node_complete', nodeId, output }) + '\n');
-            if ((res as any).flush) (res as any).flush();
         }, (nodeId) => {
+            console.log(`Node start: ${nodeId}`);
             res.write(JSON.stringify({ type: 'node_start', nodeId }) + '\n');
-            if ((res as any).flush) (res as any).flush();
         });
 
+        const finalResultStructure = {
+            ...result,
+            nodeOutputs,
+        };
+
+        console.log("Workflow execution logic complete. Finalizing...");
         let finalExecution: any;
         if (executionId) {
             finalExecution = await prisma.execution.update({
                 where: { id: executionId },
                 data: {
                     status: (result as any).errors?.length ? "FAILED" : "COMPLETED",
-                    result: result as any,
+                    result: finalResultStructure as any,
                     completedAt: new Date()
                 }
             });
         }
-        res.write(JSON.stringify({ type: 'final_result', success: true, result, execution: finalExecution }) + '\n');
+        res.write(JSON.stringify({ type: 'final_result', success: true, result: finalResultStructure, execution: finalExecution }) + '\n');
         res.end();
     } catch (error: any) {
         console.error("Workflow execution error:", error);

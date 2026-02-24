@@ -26,20 +26,30 @@ export async function saveWorkflow(
 
 export async function updateWorkflow(
     id: string,
-    input: SerializedWorkflow,
+    input: Partial<SerializedWorkflow>,
     userId: string
 ) {
+    const updateData: any = {};
+
+    if (input.metadata?.name) updateData.name = input.metadata.name;
+    if (input.metadata?.description !== undefined) updateData.description = input.metadata.description;
+    if (input.version) updateData.version = input.version;
+
+    if (input.canvas) {
+        updateData.definition = {
+            ...input.canvas,
+            executionResults: input.executionResults,
+        };
+    } else if (input.executionResults) {
+        // If only execution results were updated
+        updateData.definition = {
+            executionResults: input.executionResults
+        };
+    }
+
     return prisma.workflow.update({
         where: { id, userId },
-        data: {
-            name: input.metadata.name,
-            description: input.metadata.description,
-            version: input.version,
-            definition: {
-                ...input.canvas,
-                executionResults: input.executionResults,
-            } as any,
-        },
+        data: updateData,
     });
 }
 

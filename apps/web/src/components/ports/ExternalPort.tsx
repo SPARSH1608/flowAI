@@ -30,12 +30,12 @@ const PORT_ICONS: Record<PortDataType, React.ReactNode> = {
 };
 
 const PORT_THEME: Record<PortDataType, { bg: string; border: string; icon: string }> = {
-    text: { bg: "bg-[#1c221e]", border: "border-[#2d4a36]", icon: "text-[#6FB98F]" },
-    image: { bg: "bg-[#1c2026]", border: "border-[#2d3a4d]", icon: "text-[#6C96C4]" },
-    "image[]": { bg: "bg-[#1c2026]", border: "border-[#2d3a4d]", icon: "text-[#6C96C4]" },
-    prompt: { bg: "bg-[#202020]", border: "border-[#333333]", icon: "text-[#8F8F8F]" },
-    video: { bg: "bg-[#221c26]", border: "border-[#3e2d4d]", icon: "text-[#9D7CBF]" },
-    audio: { bg: "bg-[#261c20]", border: "border-[#4d2d36]", icon: "text-[#C77D98]" },
+    text: { bg: "bg-green-50", border: "border-green-200", icon: "text-[#6FB98F]" },
+    image: { bg: "bg-blue-50", border: "border-blue-200", icon: "text-[#6C96C4]" },
+    "image[]": { bg: "bg-blue-50", border: "border-blue-200", icon: "text-[#6C96C4]" },
+    prompt: { bg: "bg-neutral-100", border: "border-neutral-300", icon: "text-[#8F8F8F]" },
+    video: { bg: "bg-purple-50", border: "border-purple-200", icon: "text-[#9D7CBF]" },
+    audio: { bg: "bg-pink-50", border: "border-pink-200", icon: "text-[#C77D98]" },
 };
 
 export default function ExternalPort({
@@ -78,7 +78,7 @@ export default function ExternalPort({
             flex items-center justify-center
             w-6 h-6
             rounded-full
-            bg-[#131313]
+            bg-white
             border border-[#2A2A2A]
             ${theme.icon}
             shadow-sm
@@ -98,7 +98,7 @@ export default function ExternalPort({
             top-1/2 -translate-y-1/2
             ${isInput ? "right-10 origin-right" : "left-10 origin-left"}
             px-2 py-1.5
-            bg-[#1A1A1A] border border-neutral-800
+            bg-neutral-50 border border-neutral-200
             rounded-md
             shadow-xl
             flex items-center gap-2

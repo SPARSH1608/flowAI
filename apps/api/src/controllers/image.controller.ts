@@ -1,33 +1,48 @@
 import type { Request, Response } from "express";
 import { prisma } from "../db/prisma";
-import fs from "fs";
-import path from "path";
 import { v4 as uuidv4 } from "uuid";
+import crypto from "crypto";
+import { uploadToR2 } from "../services/s3.service";
 
 export async function uploadImage(req: Request, res: Response) {
+    console.log("uploadImage called");
+    console.log("Headers:", req.headers);
+    console.log("Body:", req.body);
+    console.log("File:", req.file);
+
     if (!req.file) {
         return res.status(400).json({
             error: "No image uploaded",
+            receivedBody: req.body,
+            receivedHeaders: req.headers
         });
     }
 
-    const image = await prisma.image.create({
-        data: {
-            filename: req.file.filename,
-            mimetype: req.file.mimetype,
-            size: req.file.size,
-            path: req.file.path,
-            url: `/uploads/images/${req.file.filename}`,
-            purpose: req.body.purpose ?? null,
-        },
-    });
+    try {
+        const uniqueFilename = `${crypto.randomUUID()}-${req.file.originalname}`;
+        const r2Url = await uploadToR2(req.file.buffer, uniqueFilename, req.file.mimetype);
 
-    res.json({
-        id: image.id,
-        url: image.url,
-        mimetype: image.mimetype,
-        size: image.size,
-    });
+        const image = await prisma.image.create({
+            data: {
+                filename: uniqueFilename,
+                mimetype: req.file.mimetype,
+                size: req.file.size,
+                path: r2Url,
+                url: r2Url,
+                purpose: req.body.purpose ?? null,
+            },
+        });
+
+        res.json({
+            id: image.id,
+            url: image.url,
+            mimetype: image.mimetype,
+            size: image.size,
+        });
+    } catch (error) {
+        console.error("Error uploading to R2:", error);
+        res.status(500).json({ error: "Failed to upload image" });
+    }
 }
 
 export async function listImages(req: Request, res: Response) {
@@ -46,35 +61,32 @@ export async function saveGeneratedImage(req: Request, res: Response) {
             return res.status(400).json({ error: "No imageUrl provided" });
         }
 
-        const relativePath = imageUrl.replace(/^https?:\/\/[^\/]+/, "");
-
-        const cleanPath = relativePath.startsWith('/') ? relativePath.slice(1) : relativePath;
-        const sourcePath = path.resolve(process.cwd(), cleanPath);
-
-        if (!fs.existsSync(sourcePath)) {
-            return res.status(404).json({ error: "Source image not found" });
+        const imageResponse = await fetch(imageUrl);
+        if (!imageResponse.ok) {
+            console.error("Failed to fetch image from URL:", imageUrl);
+            return res.status(400).json({ error: "Failed to fetch source image" });
         }
 
-        const filename = `${uuidv4()}${path.extname(sourcePath)}`;
-        const targetDir = path.join(process.cwd(), "uploads", "images");
-        const targetPath = path.join(targetDir, filename);
+        const arrayBuffer = await imageResponse.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const mimetype = imageResponse.headers.get("content-type") || "image/png";
 
-        if (!fs.existsSync(targetDir)) {
-            fs.mkdirSync(targetDir, { recursive: true });
-        }
+        const extension = imageUrl.split('.').pop()?.split('?')[0] || "png";
+        const validExtensions = ["png", "jpg", "jpeg", "webp", "gif"];
+        const ext = validExtensions.includes(extension.toLowerCase()) ? extension : "png";
 
-        await fs.promises.copyFile(sourcePath, targetPath);
+        const filename = `${uuidv4()}.${ext}`;
 
-        const stats = await fs.promises.stat(targetPath);
+        const r2Url = await uploadToR2(buffer, filename, mimetype);
 
         // Create DB record
         const image = await prisma.image.create({
             data: {
                 filename: filename,
-                mimetype: "image/png",
-                size: stats.size,
-                path: targetPath,
-                url: `/uploads/images/${filename}`,
+                mimetype: mimetype,
+                size: buffer.length,
+                path: r2Url,
+                url: r2Url,
                 purpose: purpose || "generated",
             },
         });

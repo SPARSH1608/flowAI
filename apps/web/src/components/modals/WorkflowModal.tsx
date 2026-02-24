@@ -49,34 +49,34 @@ export default function WorkflowModal({
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-            <div className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-md p-6 shadow-xl animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/10 backdrop-blur-sm">
+            <div className="bg-white border border-neutral-200 rounded-xl w-full max-w-md p-6 shadow-xl animate-in fade-in zoom-in duration-200">
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-semibold text-white">{title}</h2>
-                    <button onClick={onClose} className="text-neutral-500 hover:text-white transition-colors">
+                    <h2 className="text-xl font-semibold text-neutral-900">{title}</h2>
+                    <button onClick={onClose} className="text-neutral-500 hover:text-neutral-900 transition-colors">
                         <X size={20} />
                     </button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-neutral-300">Name</label>
+                        <label className="text-sm font-medium text-neutral-700">Name</label>
                         <input
                             type="text"
                             required
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                            className="w-full bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-2 text-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
                             placeholder="My Awesome Workflow"
                         />
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-neutral-300">Description</label>
+                        <label className="text-sm font-medium text-neutral-700">Description</label>
                         <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
-                            className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all min-h-[100px]"
+                            className="w-full bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-2 text-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all min-h-[100px] shadow-sm"
                             placeholder="What does this workflow do?"
                         />
                     </div>
@@ -85,14 +85,14 @@ export default function WorkflowModal({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 rounded-lg text-sm font-medium text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
+                            className="px-4 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 transition-colors border border-transparent hover:border-neutral-200"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
+                            className="px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-500 text-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
                         >
                             {isLoading && <Loader2 size={16} className="animate-spin" />}
                             {initialData ? "Save Changes" : "Create Workflow"}

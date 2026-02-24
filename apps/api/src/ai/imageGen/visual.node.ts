@@ -38,6 +38,7 @@ Return JSON with these fields:
 - realismLevel: either "strict" for photorealistic or "balanced" for stylized`,
         });
 
+        console.log("[SSE:visual_plan]", JSON.stringify(visualPlan));
         return { visualPlan };
     } catch (error) {
         console.error("Visual planning failed:", error);

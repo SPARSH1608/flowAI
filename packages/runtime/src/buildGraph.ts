@@ -14,6 +14,7 @@ export function buildLangGraph(
     },
     callbacks?: {
         onNodeStart?: (nodeId: string) => void;
+        wrapNodeExecution?: (nodeId: string, executeFn: () => Promise<any>) => Promise<any>;
     }
 ) {
     let executionOrder = compiled.executionOrder;
@@ -92,12 +93,16 @@ export function buildLangGraph(
                     state
                 );
 
-                return await executor.execute(
+                const executionFn = () => executor.execute(
                     nodeId,
                     node.config,
                     inputs,
                     state
                 );
+
+                return callbacks?.wrapNodeExecution
+                    ? await callbacks.wrapNodeExecution(nodeId, executionFn)
+                    : await executionFn();
             } catch (err: any) {
                 return {
                     ...state,

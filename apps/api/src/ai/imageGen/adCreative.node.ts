@@ -42,6 +42,7 @@ Create an ad layout blueprint. Return JSON with:
 - textPlacement: where text elements go (e.g., "Headline: top-center, large. Tagline: below headline, smaller. CTA: bottom-center, button style")`,
         });
 
+        console.log("[SSE:ad_creative]", JSON.stringify(adCreativePlan));
         return { adCreativePlan };
     } catch (error) {
         console.error("Ad creative planning failed:", error);

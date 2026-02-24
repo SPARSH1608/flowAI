@@ -15,15 +15,15 @@ const NODE_TYPES: NodeType[] = [
 
 export default function NodeSidebar() {
     return (
-        <div className="w-64 h-full bg-neutral-900 border-r border-neutral-800 p-4 space-y-2">
-            <h2 className="text-sm font-semibold text-neutral-400">
+        <div className="w-64 h-full bg-white border-r border-neutral-200 p-4 space-y-2">
+            <h2 className="text-sm font-semibold text-neutral-500">
                 Nodes
             </h2>
 
             {NODE_TYPES.map((type) => (
                 <button
                     key={type}
-                    className="w-full text-left px-3 py-2 rounded bg-neutral-800 hover:bg-neutral-700 text-sm"
+                    className="w-full text-left px-3 py-2 rounded bg-neutral-100 hover:bg-neutral-700 text-sm"
                     onClick={() =>
                         addNode(type, { x: 200, y: 200 })
                     }

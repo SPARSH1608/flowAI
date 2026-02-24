@@ -73,11 +73,11 @@ export default function AssistantNode({ data, selected, id }: NodeProps) {
 
             <div className="space-y-4">
                 {config.instructions && (
-                    <div className="px-3 py-2 bg-[#161618] rounded-lg border border-white/5 flex flex-col gap-1">
+                    <div className="px-3 py-2 bg-neutral-50 rounded-lg border border-neutral-200 flex flex-col gap-1">
                         <span className="text-[10px] uppercase text-neutral-500 font-bold tracking-wider">
                             Directives
                         </span>
-                        <span className="text-xs text-neutral-300 italic line-clamp-2 leading-relaxed">
+                        <span className="text-xs text-neutral-700 italic line-clamp-2 leading-relaxed">
                             "{config.instructions}"
                         </span>
                     </div>

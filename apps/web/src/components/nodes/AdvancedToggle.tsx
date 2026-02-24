@@ -13,7 +13,7 @@ export default function AdvancedToggle({
         <div>
             <button
                 onClick={() => setOpen(!open)}
-                className="text-xs text-neutral-400 hover:text-neutral-200"
+                className="text-xs text-neutral-600 hover:text-neutral-900"
             >
                 {open ? "Hide advanced" : "Show advanced"}
             </button>

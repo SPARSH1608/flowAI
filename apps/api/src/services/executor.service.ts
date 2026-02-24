@@ -18,7 +18,8 @@ export async function executeWorkflow(
             targetNodeId: definition.targetNodeId,
             executionResults: definition.executionResults,
         }, {
-            onNodeStart
+            onNodeStart,
+            wrapNodeExecution: definition.wrapNodeExecution
         });
         console.log("Graph built successfully");
 

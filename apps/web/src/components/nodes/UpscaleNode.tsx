@@ -80,7 +80,7 @@ export default function UpscaleNode({ data, selected, id }: NodeProps) {
 
             <div className="space-y-4">
                 {resultImage ? (
-                    <div className="relative aspect-video rounded-xl overflow-hidden border border-white/5 bg-black/40 group">
+                    <div className="relative aspect-video rounded-xl overflow-hidden border border-neutral-200 bg-black/40 group">
                         <img
                             src={resultImage}
                             alt="Upscaled"
@@ -138,11 +138,11 @@ export default function UpscaleNode({ data, selected, id }: NodeProps) {
                         </div>
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center justify-center py-6 px-4 text-center border border-dashed border-white/10 rounded-xl bg-black/20">
+                    <div className="flex flex-col items-center justify-center py-6 px-4 text-center border border-dashed border-neutral-200 rounded-xl bg-neutral-50">
                         <div className="w-8 h-8 rounded-full bg-indigo-500/10 flex items-center justify-center mb-2">
                             <Settings2 className="text-indigo-400" size={14} />
                         </div>
-                        <h3 className="text-xs font-semibold text-neutral-200 mb-1">Configure Upscaler</h3>
+                        <h3 className="text-xs font-semibold text-neutral-900 mb-1">Configure Upscaler</h3>
                         <p className="text-[10px] text-neutral-500 max-w-[160px] mb-3">
                             Select node to change model or upscale factor.
                         </p>
@@ -151,7 +151,7 @@ export default function UpscaleNode({ data, selected, id }: NodeProps) {
                                 e.stopPropagation();
                                 setSelectedNodeId(id);
                             }}
-                            className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-medium text-neutral-300 transition-colors"
+                            className="px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 border border-neutral-200 rounded-lg text-[10px] font-medium text-neutral-700 transition-colors"
                         >
                             Open Inspector
                         </button>
@@ -164,7 +164,7 @@ export default function UpscaleNode({ data, selected, id }: NodeProps) {
                         handleRun();
                     }}
                     disabled={data.status === "executing"}
-                    className="nodrag w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2 rounded-xl text-xs font-semibold shadow-[0_4px_20px_rgba(79,70,229,0.2)] transition-all transform hover:scale-[1.02] active:scale-[0.98] border border-white/10"
+                    className="nodrag w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2 rounded-xl text-xs font-semibold shadow-[0_4px_20px_rgba(79,70,229,0.2)] transition-all transform hover:scale-[1.02] active:scale-[0.98] border border-neutral-200"
                 >
                     {resultImage ? <RefreshCcw size={14} /> : <Layers size={14} />}
                     {data.status === "executing" ? "Processing..." : resultImage ? "Upscale Again" : "Run Upscale"}

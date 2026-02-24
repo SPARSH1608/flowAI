@@ -3,6 +3,7 @@
 import { buildImageGenGraph } from "../../../apps/api/src/ai/imageGen/graph.js";
 import { generateImagesFal } from "../../../apps/api/src/ai/fal/image.js";
 import { NodeExecutor } from "./types.js";
+import { loggerContext } from "../../../apps/api/src/utils/logger.js";
 
 export const ImageGenerationExecutor: NodeExecutor = {
     async execute(nodeId, config, inputs, state) {
@@ -42,11 +43,20 @@ export const ImageGenerationExecutor: NodeExecutor = {
             finalState = config.debugInfoOverride;
         } else {
             const compilerGraph = buildImageGenGraph();
-            finalState = await compilerGraph.invoke({
+            const parentContext = loggerContext.getStore();
+
+            // Re-wrap the LangGraph invocation to ensure AsyncLocalStorage context isn't lost
+            const invokeGraph = () => compilerGraph.invoke({
                 userText,
                 inlinePrompt,
                 referenceImages,
             });
+
+            if (parentContext) {
+                finalState = await loggerContext.run(parentContext, invokeGraph);
+            } else {
+                finalState = await invokeGraph();
+            }
         }
 
         if (!finalState.finalPrompt) {
@@ -69,6 +79,8 @@ export const ImageGenerationExecutor: NodeExecutor = {
         const height = config.size?.height || 768;
         const numImages = 1;
 
+        console.log("[SSE:generation_start]", JSON.stringify({ model, width, height, numImages, hasReferenceImages: referenceImages.length > 0 }));
+
         const imageUrls = await generateImagesFal({
             model,
             prompt: finalState.finalPrompt,
@@ -79,6 +91,8 @@ export const ImageGenerationExecutor: NodeExecutor = {
             width,
             height,
         });
+
+        console.log("[SSE:generation_complete]", JSON.stringify({ imageCount: imageUrls.length }));
 
         const output = {
             [nodeId]: {

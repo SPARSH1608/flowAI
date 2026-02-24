@@ -27,7 +27,7 @@ export default function UserMenu() {
         <div className="relative" ref={menuRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 p-1.5 rounded-2xl hover:bg-white/5 transition-all outline-none"
+                className="flex items-center gap-2 p-1.5 rounded-2xl hover:bg-neutral-100 transition-all outline-none"
             >
                 <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-[10px] font-bold border border-white/10 shadow-lg shrink-0">
                     {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase()}
@@ -42,10 +42,10 @@ export default function UserMenu() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.2, ease: "easeOut" }}
-                        className="absolute right-0 mt-2 z-[100] p-2 bg-[#121217] border border-white/5 rounded-2xl w-56 shadow-2xl overflow-hidden"
+                        className="absolute right-0 mt-2 z-[100] p-2 bg-white border border-neutral-200 rounded-2xl w-56 shadow-2xl overflow-hidden"
                     >
                         <div className="px-4 py-3 border-b border-white/10 mb-2">
-                            <p className="text-xs font-bold text-white truncate">{user?.name || "User"}</p>
+                            <p className="text-xs font-bold text-neutral-900 truncate">{user?.name || "User"}</p>
                             <p className="text-[10px] text-neutral-500 truncate mt-0.5">{user?.email}</p>
                         </div>
 

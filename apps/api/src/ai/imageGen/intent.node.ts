@@ -9,6 +9,7 @@ export async function intentNode(
 
     if (!referenceImageAnalysis && state.referenceImages && state.referenceImages.length > 0 && state.referenceImages[0]?.url) {
         referenceImageAnalysis = await analyzeReferenceImage(state.referenceImages[0].url);
+        console.log("[SSE:vision_analysis]", JSON.stringify(referenceImageAnalysis));
     }
 
     const textParts = [
@@ -86,6 +87,7 @@ Return JSON with these fields:
 - adFormat: the format (e.g., "social-media-post", "instagram-story", "banner", "poster", "billboard")`,
         });
 
+        console.log("[SSE:intent]", JSON.stringify(intent));
         return { intent, referenceImageAnalysis };
     } catch (error) {
         console.error("Intent extraction failed:", error);

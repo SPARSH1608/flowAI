@@ -16,6 +16,11 @@ interface WorkflowState {
     setNodeExecutionStatus: (nodeId: string, status: "idle" | "running" | "completed" | "error") => void;
     clearNodeExecutionStatus: () => void;
 
+    executionLogs: Record<string, string[]>;
+    addExecutionLog: (nodeId: string, log: string) => void;
+    clearExecutionLogs: (nodeId?: string) => void;
+
+
     selectedNodeId: string | null;
     setSelectedNodeId: (id: string | null) => void;
 
@@ -43,6 +48,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     deleteMode: false,
     executionResults: {},
     nodeExecutionStatus: {},
+    executionLogs: {},
     selectedNodeId: null,
 
     setSelectedNodeId: (id) => set({ selectedNodeId: id }),
@@ -54,6 +60,20 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     clearNodeExecutionStatus: () => set({ nodeExecutionStatus: {} }),
 
     setExecutionResults: (results) => set({ executionResults: results }),
+
+    addExecutionLog: (nodeId, log) => set((state) => ({
+        executionLogs: {
+            ...state.executionLogs,
+            [nodeId]: [...(state.executionLogs[nodeId] || []), log]
+        }
+    })),
+
+    clearExecutionLogs: (nodeId) => set((state) => {
+        if (nodeId) {
+            return { executionLogs: { ...state.executionLogs, [nodeId]: [] } };
+        }
+        return { executionLogs: {} };
+    }),
 
     addExecution: (execution) => set((state) => ({ executions: [execution, ...state.executions] })),
 
