@@ -13,7 +13,7 @@ interface Props {
     onChange: (newData: any) => void;
 }
 
-// Parse [SSE:type] prefixed log messages into structured data
+
 function parseSSELogs(logs: string[]) {
     const parsed: Record<string, any> = {};
     const rawLogs: string[] = [];
@@ -35,7 +35,7 @@ function parseSSELogs(logs: string[]) {
     return { parsed, rawLogs };
 }
 
-// Determine pipeline step statuses from logs
+
 function getPipelineSteps(logs: string[]) {
     const steps = [
         { id: "vision", label: "Vision Analysis", icon: Eye, color: "text-cyan-500", bgColor: "bg-cyan-50", borderColor: "border-cyan-200" },
@@ -64,13 +64,13 @@ function getPipelineSteps(logs: string[]) {
             completedSteps.add(sseMap[match[1]!]!);
         }
         if (log.includes("generation_start")) activeStep = "generate";
-        // Final fallback block in case generation complete SSE drops but execution ends
+        
         if (log.includes("Node complete") || log.includes("Execution complete") || log.includes("Generated")) {
             completedSteps.add("generate");
         }
     }
 
-    // Determine active step (first incomplete step)
+    
     if (!activeStep) {
         for (const step of steps) {
             if (!completedSteps.has(step.id)) {
@@ -134,13 +134,13 @@ export default function ImageGenerationDetailsView({ data, logs = [], onChange }
 
     const hasExecuted = Object.keys(intent).length > 0 || Object.keys(visualPlan).length > 0 || finalPrompt;
 
-    // Explicit fallback: if debugInfo has finalPrompt or execution is completely done
+    
     const hasFinishedBackend = !!(data.debugInfo?.finalPrompt || Object.keys(data.debugInfo || {}).length > 2);
 
     const isProcessing = logs.length > 0 && !hasFinishedBackend && !pipelineSteps.every(s => s.completed || (!s.active));
     const allDone = hasFinishedBackend || pipelineSteps.filter(s => s.completed).length === pipelineSteps.length;
 
-    // ─── Setup Card (always shown) ───
+    
     const SetupView = (
         <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm">
             <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-100 bg-neutral-50/50">
@@ -160,9 +160,22 @@ export default function ImageGenerationDetailsView({ data, logs = [], onChange }
                         <option value="fal-ai/flux-realism">Flux Realism (Ads Optimised)</option>
                         <option value="fal-ai/flux-pro/v1.1">Flux Pro 1.1 (High Speed)</option>
                         <option value="fal-ai/flux/dev">Flux Dev</option>
-                        <option value="custom">Custom Fal Model</option>
+                        <option value="nano-banana-pro">Nano Banana Pro</option>
+                        <option value="custom">Custom Fal Model...</option>
                     </select>
                 </div>
+                {config.model === "custom" && (
+                    <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+                        <label className="text-[10px] uppercase text-neutral-500 font-semibold mb-1.5 block">Custom Model Name</label>
+                        <input
+                            type="text"
+                            value={config.customModel || ""}
+                            onChange={(e) => updateConfig("customModel", e.target.value)}
+                            placeholder="e.g. fal-ai/auraflow"
+                            className="w-full bg-white border border-neutral-200 rounded-lg p-2.5 text-sm text-neutral-700 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 transition-all"
+                        />
+                    </div>
+                )}
                 <div>
                     <label className="text-[10px] uppercase text-neutral-500 font-semibold mb-1.5 block">Base Prompt</label>
                     <textarea
@@ -197,7 +210,7 @@ export default function ImageGenerationDetailsView({ data, logs = [], onChange }
         </div>
     );
 
-    // ─── Processing Timeline ───
+    
     const TimelineView = logs.length > 0 && (
         <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm">
             <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-100 bg-neutral-50/50">
@@ -263,7 +276,7 @@ export default function ImageGenerationDetailsView({ data, logs = [], onChange }
         </div>
     );
 
-    // ─── Vision Analysis Card ───
+    
     const VisionCard = Object.keys(visionAnalysis).length > 0 && (
         <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-neutral-100 bg-cyan-50/30">
@@ -312,7 +325,7 @@ export default function ImageGenerationDetailsView({ data, logs = [], onChange }
         </div>
     );
 
-    // ─── Ad Intent Card (Editable) ───
+    
     const IntentCard = Object.keys(intent).length > 0 && (
         <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-neutral-100 bg-blue-50/30">
@@ -321,34 +334,34 @@ export default function ImageGenerationDetailsView({ data, logs = [], onChange }
                 {intent.adType && <span className="ml-auto text-[9px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200 font-semibold uppercase">{intent.adType}</span>}
             </div>
             <div className="p-4 space-y-4">
-                {/* Row 1: Subject & Scenario */}
+                {}
                 <div className="grid grid-cols-1 gap-3">
                     <EditableField label="Subject" value={intent.subject} onChange={(v) => updateIntent("subject", v)} />
                     <EditableField label="Scenario" value={intent.scenario} onChange={(v) => updateIntent("scenario", v)} />
                 </div>
 
-                {/* Row 2: Mood, Brand Tone, Art Style */}
+                {}
                 <div className="grid grid-cols-3 gap-3">
                     <EditableField label="Mood" value={intent.mood} onChange={(v) => updateIntent("mood", v)} />
                     <EditableField label="Brand Tone" value={intent.brandTone} onChange={(v) => updateIntent("brandTone", v)} />
                     <EditableField label="Art Style" value={intent.artStyle} onChange={(v) => updateIntent("artStyle", v)} />
                 </div>
 
-                {/* Row 3: Audience, Lighting, Composition */}
+                {}
                 <div className="grid grid-cols-3 gap-3">
                     <EditableField label="Audience" value={intent.audience} onChange={(v) => updateIntent("audience", v)} />
                     <EditableField label="Lighting" value={intent.lighting} onChange={(v) => updateIntent("lighting", v)} />
                     <EditableField label="Composition" value={intent.composition} onChange={(v) => updateIntent("composition", v)} />
                 </div>
 
-                {/* Row 4: Headline, Primary Text, CTA */}
+                {}
                 <div className="border-t border-neutral-100 pt-3 space-y-3">
                     <EditableField label="Headline" value={intent.headline} onChange={(v) => updateIntent("headline", v)} highlight />
                     <EditableField label="Primary Text" value={intent.primaryText} onChange={(v) => updateIntent("primaryText", v)} multiline />
                     <EditableField label="Call to Action" value={intent.ctaText} onChange={(v) => updateIntent("ctaText", v)} highlight />
                 </div>
 
-                {/* Design Elements */}
+                {}
                 {intent.designElements && intent.designElements.length > 0 && (
                     <div>
                         <label className="text-[10px] uppercase text-neutral-500 font-semibold mb-2 block">Design Elements</label>
@@ -363,7 +376,7 @@ export default function ImageGenerationDetailsView({ data, logs = [], onChange }
         </div>
     );
 
-    // ─── Visual Plan Card (Editable) ───
+    
     const VisualPlanCard = Object.keys(visualPlan).length > 0 && (
         <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-neutral-100 bg-purple-50/30">
@@ -380,7 +393,7 @@ export default function ImageGenerationDetailsView({ data, logs = [], onChange }
         </div>
     );
 
-    // ─── Ad Creative Card (Read-only) ───
+    
     const AdCreativeCard = Object.keys(adCreative).length > 0 && (
         <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-neutral-100 bg-pink-50/30">
@@ -418,7 +431,7 @@ export default function ImageGenerationDetailsView({ data, logs = [], onChange }
         </div>
     );
 
-    // ─── Final Prompt Card (Collapsible, Editable) ───
+    
     const FinalPromptCard = finalPrompt && (
         <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300">
             <button onClick={() => setShowPrompt(!showPrompt)}
@@ -445,7 +458,7 @@ export default function ImageGenerationDetailsView({ data, logs = [], onChange }
         </div>
     );
 
-    // ─── Generation Info ───
+    
     const GenerationInfoCard = Object.keys(generationInfo).length > 0 && (
         <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-neutral-100 bg-orange-50/30">
@@ -478,7 +491,7 @@ export default function ImageGenerationDetailsView({ data, logs = [], onChange }
                 </div>
             ) : (
                 <div className="space-y-4 pb-6">
-                    {/* Config & Timeline row */}
+                    {}
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-4">
                             {SetupView}
@@ -489,7 +502,7 @@ export default function ImageGenerationDetailsView({ data, logs = [], onChange }
                         </div>
                     </div>
 
-                    {/* AI Processing Results - stacked vertically */}
+                    {}
                     {VisionCard}
                     {IntentCard}
                     {VisualPlanCard}
@@ -502,7 +515,7 @@ export default function ImageGenerationDetailsView({ data, logs = [], onChange }
     );
 }
 
-// ─── Reusable Field Components ───
+
 
 function EditableField({ label, value, onChange, multiline, highlight }: {
     label: string; value?: string; onChange: (val: string) => void; multiline?: boolean; highlight?: boolean;

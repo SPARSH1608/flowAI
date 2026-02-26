@@ -30,7 +30,7 @@ app.use("/auth", authRoutes);
 app.use("/workflows", authenticate, workflowRoutes);
 app.use("/images", imageRoutes);
 
-// Global Error Handler
+
 app.use((err: any, req: any, res: any, next: any) => {
     console.error("Global Error Handler Catch-all:", err);
     res.status(err.status || 500).json({

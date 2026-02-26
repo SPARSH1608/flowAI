@@ -21,8 +21,8 @@ export async function callLLM<T>({
     });
 
     try {
-        // Handle potential different response structures from fal-ai/any-llm
-        // Sometimes it's result.data.output, sometimes result.output directly
+        
+        
         const data = result.data || result;
         let output = data.output || data.text || (typeof data === 'string' ? data : JSON.stringify(data));
 

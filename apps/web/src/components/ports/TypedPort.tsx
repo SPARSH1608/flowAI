@@ -32,7 +32,7 @@ export default function TypedPort({
         "
             />
 
-            {/* Label */}
+            {}
             <span
                 className="
           absolute

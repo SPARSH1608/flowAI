@@ -116,38 +116,17 @@ export function buildLangGraph(
         });
     }
 
-    const validNodes = new Set(executionOrder);
-
-    for (const [from, tos] of compiled.adjacency.entries()) {
-        if (!validNodes.has(from)) continue;
-
-        for (const to of tos) {
-            if (validNodes.has(to)) {
-                //@ts-ignore
-                graph.addEdge(from, to);
-            }
-        }
+    // Only add edges based on strict execution order to force sequential execution
+    for (let i = 0; i < executionOrder.length - 1; i++) {
+        const from = executionOrder[i];
+        const to = executionOrder[i + 1];
+        // @ts-ignore
+        graph.addEdge(from, to);
     }
 
-    // Find all nodes that are not targets of any filtered edge
-    const activeTargets = new Set<string>();
-    for (const [from, tos] of compiled.adjacency.entries()) {
-        if (!validNodes.has(from)) continue;
-
-        for (const to of tos) {
-            if (validNodes.has(to)) {
-                activeTargets.add(to);
-            }
-        }
-    }
-
-    const startNodes = executionOrder.filter(
-        (nodeId) => !activeTargets.has(nodeId)
-    );
-
-    for (const startNode of startNodes) {
-        //@ts-ignore
-        graph.addEdge(START, startNode);
+    if (executionOrder.length > 0) {
+        // @ts-ignore
+        graph.addEdge(START, executionOrder[0]);
     }
 
     return graph.compile();

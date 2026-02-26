@@ -65,7 +65,7 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
                     result.result.errors.forEach((e: any) => setNodeExecutionStatus(e.nodeId, "error"));
                 }
 
-                // Check for errors specific to this node after final results are set
+                
                 const outputs = result.result.nodeOutputs || {};
                 if (!outputs[id]) {
                     const errors = result.result.errors || [];
@@ -146,7 +146,7 @@ export default function ImageGenerationNode({ data, selected, id }: NodeProps) {
             {resultImage ? (
                 <div className="space-y-4">
                     <div className="relative w-full aspect-square min-h-[300px] group rounded-lg overflow-hidden bg-black border border-neutral-200">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        {}
                         <img
                             src={resultImage}
                             className="w-full h-full object-cover"

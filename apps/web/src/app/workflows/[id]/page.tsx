@@ -75,15 +75,12 @@ export default function WorkflowPage() {
 
             <main className="flex flex-1 h-[calc(100vh-60px)] relative overflow-hidden">
                 <ReactFlowProvider>
-                    {/* Left Dock */}
                     <FloatingSidebar />
 
-                    {/* Center Canvas */}
                     <div className="flex-1 relative bg-[#FAFAFA] border-x border-neutral-200">
                         <WorkflowCanvas />
                     </div>
 
-                    {/* Right Inspector Drawer */}
                     <RightInspector />
                 </ReactFlowProvider>
             </main>

@@ -41,7 +41,7 @@ export async function updateWorkflow(
             executionResults: input.executionResults,
         };
     } else if (input.executionResults) {
-        // If only execution results were updated
+        
         updateData.definition = {
             executionResults: input.executionResults
         };

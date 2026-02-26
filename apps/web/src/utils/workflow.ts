@@ -125,10 +125,10 @@ export async function executeWorkflow(
                         onPartialUpdate(partialResults);
                     }
                 } else if (data.type === 'final_result') {
-                    // Extract errors if present in the raw result
+                    
                     let errors: any[] = [];
                     if (data.result) {
-                        // Data.result contains LangGraph multi-node output
+                        
                         for (const nodeKey in data.result) {
                             if (data.result[nodeKey]?.errors) {
                                 errors = errors.concat(data.result[nodeKey].errors);

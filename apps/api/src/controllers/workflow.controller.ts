@@ -7,8 +7,8 @@ import {
     updateWorkflow,
     getWorkflowById,
     getWorkflows,
-} from "../services/workflow.service";
-import { executeWorkflow } from "../services/executor.service";
+} from "../services/workflowService";
+import { executeWorkflow } from "../services/executorService";
 import { prisma } from "../db/prisma";
 import { loggerContext } from "../utils/logger";
 
@@ -41,7 +41,7 @@ export async function updateWorkflowController(
     const { id } = req.params;
     const userId = (req as any).userId;
 
-    // Try to validate as full workflow first
+    
     const fullParsed = SerializedWorkflowSchema.safeParse(req.body);
 
     if (fullParsed.success) {
@@ -56,7 +56,7 @@ export async function updateWorkflowController(
         }
     }
 
-    // Fallback: Partial update (usually from Dashboard for name/description)
+    
     const body = req.body;
     console.log("Update fallback check. Body keys:", Object.keys(body));
 
@@ -124,14 +124,14 @@ export async function executeWorkflowController(
             });
         }
 
-        // Set headers for streaming
+        
         res.setHeader('Content-Type', 'application/x-ndjson');
         res.setHeader('X-Content-Type-Options', 'nosniff');
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
-        res.setHeader('X-Accel-Buffering', 'no'); // Tell Nginx not to buffer
+        res.setHeader('X-Accel-Buffering', 'no'); 
 
-        // Send an immediate heartbeat to "open" the stream
+        
         res.write(JSON.stringify({ type: 'processing_started', timestamp: new Date().toISOString() }) + '\n');
 
         let executionId: string | undefined;
@@ -148,7 +148,7 @@ export async function executeWorkflowController(
                 console.log(`Execution record created: ${executionId}`);
             } catch (dbError) {
                 console.error("Failed to create execution record:", dbError);
-                // Continue execution even if DB logging fails
+                
             }
         }
 

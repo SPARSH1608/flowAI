@@ -51,9 +51,9 @@ export default function NodeInfoModal({ isOpen, onClose, data, onReExecute, titl
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
-            {/* Modal Container */}
+            {}
             <div className="bg-white border border-neutral-200 w-full max-w-3xl h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-                {/* Header */}
+                {}
                 <div className="flex-none px-6 py-5 border-b border-neutral-200 flex items-center justify-between bg-neutral-50">
                     <div className="flex items-center gap-4">
                         <div className="bg-neutral-800/50 p-2.5 rounded-xl border border-neutral-700/50 text-neutral-700">
@@ -72,7 +72,7 @@ export default function NodeInfoModal({ isOpen, onClose, data, onReExecute, titl
                     </button>
                 </div>
 
-                {/* Body Content */}
+                {}
                 {isImageGen ? (
                     <div className="flex-1 overflow-hidden flex flex-col min-h-0 bg-white">
                         <ImageGenerationDetailsView
@@ -101,7 +101,7 @@ export default function NodeInfoModal({ isOpen, onClose, data, onReExecute, titl
                     </div>
                 )}
 
-                {/* Footer Controls */}
+                {}
                 <div className="flex-none px-6 py-5 border-t border-neutral-200 bg-neutral-50 flex items-center justify-between">
                     <p className="text-xs text-neutral-500 tracking-wide font-medium">
                         Modifying this data replaces what is sent to the next node.

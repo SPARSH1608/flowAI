@@ -90,7 +90,6 @@ function DashboardPage({ token }: { token: string }) {
 
       await updateWorkflow(editingWorkflow.id, updatePayload, token);
 
-      // Update state locally (No GET request needed!)
       setWorkflows(workflows.map(w =>
         w.id === editingWorkflow.id
           ? { ...w, name: data.name, description: data.description, updatedAt: updatePayload.metadata.updatedAt }

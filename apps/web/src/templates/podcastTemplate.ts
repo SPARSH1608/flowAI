@@ -28,12 +28,12 @@ export const podcastTemplate: SerializedWorkflow = {
                 position: { x: 600, y: 200 },
                 data: { label: "Generate", config: {} },
             },
-            // {
-            //   id: "export1",
-            //   type: "EXPORT_NODE",
-            //   position: { x: 850, y: 200 },
-            //   data: { label: "Export", config: {} },
-            // },
+            
+            
+            
+            
+            
+            
         ],
         edges: [
             {
@@ -50,13 +50,13 @@ export const podcastTemplate: SerializedWorkflow = {
                 target: "gen1",
                 targetHandle: "in:text",
             },
-            // {
-            //   id: "e3",
-            //   source: "gen1",
-            //   sourceHandle: "out:image[]",
-            //   target: "export1",
-            //   targetHandle: "in:image[]",
-            // },
+            
+            
+            
+            
+            
+            
+            
         ],
     },
 };

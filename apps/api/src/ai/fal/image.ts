@@ -38,13 +38,10 @@ export async function generateImagesFal({
         hasReferenceImages: !!imageUrls?.length,
     });
 
-    // Intelligent model routing based on ad type and inputs
     const resolvedModel = resolveModel(model, adType, imageUrls);
     console.log(`[ModelRouter] Selected model: ${resolvedModel} (original: ${model}, adType: ${adType})`);
 
     const hasReferenceImages = imageUrls && imageUrls.length > 0;
-
-    // Route to the appropriate generation function
     if (resolvedModel === "fal-ai/flux-pro/kontext" && hasReferenceImages) {
         return generateWithKontext(resolvedModel, prompt, imageUrls!, numImages);
     } else if (resolvedModel === "fal-ai/ip-adapter-face-id" && hasReferenceImages) {
@@ -61,23 +58,23 @@ function resolveModel(
 ): string {
     const hasRefs = imageUrls && imageUrls.length > 0;
 
-    // If user explicitly chose a model and it's not just the default, respect it
+    
     if (requestedModel !== "fal-ai/flux-realism" && !requestedModel.includes("custom")) {
         return requestedModel;
     }
 
-    // Smart routing based on ad type + whether we have reference images
+    
     if (!hasRefs) {
-        // No reference images: use Flux Pro for high-quality text-to-image
+        
         return "fal-ai/flux-pro";
     }
 
     if (adType === "person-centric-ad") {
-        // Person ads with reference face: use IP-Adapter for face preservation
+        
         return "fal-ai/ip-adapter-face-id";
     }
 
-    // Product/lifestyle ads with reference: use Kontext for context-aware editing
+    
     return "fal-ai/flux-pro/kontext";
 }
 
@@ -89,7 +86,7 @@ async function generateWithKontext(
 ): Promise<string[]> {
     console.log("[Kontext] Generating with reference image context...");
 
-    // Upload reference image to fal storage first
+    
     console.log(`[Kontext] Uploading reference image: ${imageUrls[0]}`);
     const uploadedRefUrl = await uploadToFal(imageUrls[0] as string);
     console.log(`[Kontext] Reference image uploaded to: ${uploadedRefUrl}`);
@@ -137,7 +134,6 @@ async function generateWithFaceId(
 ): Promise<string[]> {
     console.log("[FaceID] Generating with face identity preservation...");
 
-    // Upload face image to fal storage first
     console.log(`[FaceID] Uploading face image: ${faceImageUrl}`);
     const uploadedFaceUrl = await uploadToFal(faceImageUrl);
     console.log(`[FaceID] Face image uploaded to: ${uploadedFaceUrl}`);
@@ -175,7 +171,6 @@ async function generateWithFaceId(
             }
         } catch (error: any) {
             console.error(`[FaceID] Error generating image ${i + 1}:`, error?.body || error);
-            // Fallback: try Kontext instead
             console.log("[FaceID] Falling back to Kontext...");
             return generateWithKontext("fal-ai/flux-pro/kontext", prompt, [uploadedFaceUrl], numImages);
         }
@@ -208,6 +203,8 @@ async function generateStandard(
 
     const isRecraft = model.includes("recraft");
     const isFluxPro = model.includes("flux-pro");
+    const isFlux = model.includes("flux");
+    const isNanoBanana = model.includes("nano-banana-pro") || model.includes("custom");
 
     if (!isRecraft) {
         if (width && height) {
@@ -215,17 +212,25 @@ async function generateStandard(
         } else {
             input.image_size = "landscape_4_3";
         }
-        input.guidance_scale = isFluxPro ? 3.5 : 2.5;
-        input.num_inference_steps = isFluxPro ? 30 : 50;
+
+        
+        if (isFluxPro) {
+            input.guidance_scale = 3.5;
+            input.num_inference_steps = 30;
+        } else if (!isFlux && !isNanoBanana) {
+            input.guidance_scale = 2.5;
+            input.num_inference_steps = 50;
+        }
     }
 
     if (imageUrls && imageUrls.length > 0) {
-        // Upload reference image if present
+        
         console.log(`[Standard] Uploading reference image: ${imageUrls[0]}`);
         const uploadedRefUrl = await uploadToFal(imageUrls[0] as string);
         input.image_url = uploadedRefUrl;
 
-        if (!isRecraft && !isFluxPro) {
+        
+        if (!isRecraft && !isFluxPro && !model.includes("custom")) {
             input.strength = strength || 0.75;
         }
     }
@@ -257,7 +262,7 @@ async function generateStandard(
     return savedUrls;
 }
 
-// --- Helper functions ---
+
 
 function ensureUploadDir(): string {
     const uploadDir = path.join(process.cwd(), "uploads/generated");

@@ -39,8 +39,8 @@ export default function BaseNode({
     const { token } = useAuth();
 
     const handleReExecute = async () => {
-        // Mapping is now handled in RightInspector auto-saves.
-        // Re-run the node directly
+        
+        
         setTimeout(async () => {
             const workflow = {
                 ...serializeWorkflow(),
@@ -69,7 +69,7 @@ export default function BaseNode({
     const nodeResult = executionResults?.[id];
     const node = useWorkflowStore(s => s.nodes.find(n => n.id === id));
 
-    // Add pulsing border ring when node is actively running
+    
     const isRunning = executionStatus?.status === "running";
     const isError = executionStatus?.status === "error";
 
@@ -100,11 +100,11 @@ export default function BaseNode({
                     height: node?.height ?? 'auto',
                 }}
             >
-                {/* Status conic gradient active state */}
+                {}
                 {isRunning && (
                     <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-indigo-500 to-transparent animate-[pulse_1.5s_ease-in-out_infinite]" />
                 )}
-                {/* Header section */}
+                {}
                 <div className="react-flow__node-drag-handle flex items-center justify-between px-4 py-3 border-b border-neutral-200 bg-transparent cursor-grab active:cursor-grabbing">
                     <div className="flex items-center gap-2">
                         <NodeStatusBadge status={executionStatus?.status || status} />
@@ -127,7 +127,7 @@ export default function BaseNode({
                     </div>
                 </div>
 
-                {/* Body Content */}
+                {}
                 <div className="p-4 space-y-4 flex flex-col flex-1 min-h-0 relative">
                     <div className="flex-none">
                         {children}
@@ -165,7 +165,7 @@ function ExecutionResult({ id, nodeHeight }: { id: string, nodeHeight?: number }
     const [isExpanded, setIsExpanded] = useState(false);
 
     useEffect(() => {
-        // Automatically determine if progressive disclosure expander is needed based on manual heights
+        
         if (textRef.current && !nodeHeight && !isExpanded) {
             setIsTruncated(textRef.current.scrollHeight > textRef.current.clientHeight);
         } else {
@@ -175,7 +175,7 @@ function ExecutionResult({ id, nodeHeight }: { id: string, nodeHeight?: number }
 
     if (!output) return null;
 
-    // Expand if specifically resized
+    
     const shouldExpand = isExpanded || !!nodeHeight;
 
     return (
@@ -197,7 +197,7 @@ function ExecutionResult({ id, nodeHeight }: { id: string, nodeHeight?: number }
             <div className={`bg-black/40 rounded-xl border border-neutral-200 overflow-hidden flex flex-col relative ${shouldExpand ? 'flex-1 min-h-0' : ''}`}>
                 {output.image ? (
                     <div className="relative aspect-video w-full bg-black/50">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        {}
                         <img
                             src={normalizeUrl(process.env.NEXT_PUBLIC_API_URL, output.image)}
                             alt="Output"
@@ -208,7 +208,7 @@ function ExecutionResult({ id, nodeHeight }: { id: string, nodeHeight?: number }
                     <div className="grid grid-cols-2 gap-0.5 bg-neutral-900 border-b border-neutral-200">
                         {output['image[]'].map((img: string, i: number) => (
                             <div key={i} className="relative aspect-square w-full bg-black">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                {}
                                 <img
                                     src={normalizeUrl(process.env.NEXT_PUBLIC_API_URL, img)}
                                     alt={`Output ${i}`}

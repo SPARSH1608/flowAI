@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { WorkflowNode, WorkflowEdge } from "@/types/workflow";
 
-const STORAGE_KEY = null; // Unused
+const STORAGE_KEY = null; 
 
 interface WorkflowState {
     nodes: WorkflowNode[];
@@ -120,8 +120,8 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     toggleDeleteMode: () => set((state) => ({ deleteMode: !state.deleteMode })),
 
     hydrate: () => {
-        // No-op or fetch logic can go here effectively
-        // Since we are moving to DB-first loading, we can leave this empty or remove calls to it.
+        
+        
     },
 
     updateNodeData: (id: string, dataParams: any) =>

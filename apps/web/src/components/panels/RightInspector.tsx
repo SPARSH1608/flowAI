@@ -32,8 +32,8 @@ export default function RightInspector() {
                     setContent(nodeData?.config?.text || "");
                 }
             } else if (isImageGen) {
-                // ImageGen nodes typically store complex form data in their config, or they have execution results 
-                // that contain the intent/visualPlan structures.
+                
+                
                 const debugData = executionResult || nodeData?.config || nodeData;
                 setImageGenData(debugData);
             } else {
@@ -74,7 +74,7 @@ export default function RightInspector() {
 
     return (
         <div className={`${inspectorWidth} h-full flex-none bg-[#FAFAFA] border-l border-neutral-200 flex flex-col z-40 transform transition-all duration-300 translate-x-0 shadow-sm relative`}>
-            {/* Header */}
+            {}
             <div className="flex-none px-6 py-5 border-b border-neutral-200 flex items-center justify-between bg-white">
                 <div className="flex items-center gap-3">
                     <div className="bg-neutral-100 p-2 rounded-lg border border-neutral-200 text-neutral-700">
@@ -94,7 +94,7 @@ export default function RightInspector() {
                 </button>
             </div>
 
-            {/* Body */}
+            {}
             {isImageGen ? (
                 <div className="flex-1 overflow-hidden flex flex-col min-h-0 bg-[#FAFAFA]">
                     <ImageGenerationDetailsView
@@ -102,15 +102,15 @@ export default function RightInspector() {
                         logs={executionLogs[selectedNodeId] || []}
                         onChange={(newData) => {
                             setImageGenData(newData);
-                            // Only update config if we're not just editing an execution result 
-                            // Or default to saving to node.data.config so it persists
+                            
+                            
                             updateNodeData(selectedNodeId, { config: { ...selectedNode.data.config, ...newData } });
                         }}
                     />
                 </div>
             ) : (
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6 bg-[#FAFAFA]">
-                    {/* Common Metadata */}
+                    {}
                     <div className="space-y-4">
                         <div>
                             <label className="text-[10px] uppercase text-neutral-500 font-semibold mb-1.5 block tracking-wider">Node Title</label>
@@ -122,7 +122,7 @@ export default function RightInspector() {
                         </div>
                     </div>
 
-                    {/* Specific Config Forms */}
+                    {}
                     {isTextBased ? (
                         <div className="space-y-4 border-t border-neutral-200 pt-4">
                             <label className="text-[10px] uppercase text-neutral-500 font-semibold mb-1.5 flex items-center gap-2 tracking-wider">

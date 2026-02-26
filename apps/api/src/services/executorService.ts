@@ -34,7 +34,7 @@ export async function executeWorkflow(
             console.log("Stream update:", JSON.stringify(update, null, 2));
             const updates = update as any;
 
-            // LangGraph 'updates' mode returns { nodeName: { channelUpdate } }
+            
             for (const nodeName in updates) {
                 const nodeUpdate = updates[nodeName];
                 if (nodeUpdate.nodeOutputs && onNodeComplete) {

@@ -13,7 +13,7 @@ export function setupGlobalLogger() {
         const context = loggerContext.getStore();
 
         if (context) {
-            // We are inside an execution context, format and send to the stream
+            
             const message = args.map(arg =>
                 typeof arg === 'string' ? arg : JSON.stringify(arg)
             ).join(' ');
@@ -21,7 +21,7 @@ export function setupGlobalLogger() {
             context.onLog(message);
         }
 
-        // Always call the original so it still appears in the terminal
+        
         originalConsoleLog.apply(console, args);
     };
 }

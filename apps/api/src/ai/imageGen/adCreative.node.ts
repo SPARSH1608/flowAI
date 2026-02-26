@@ -47,7 +47,7 @@ Create an ad layout blueprint. Return JSON with:
     } catch (error) {
         console.error("Ad creative planning failed:", error);
 
-        // Sensible defaults
+        
         return {
             adCreativePlan: {
                 layout: "Product centered with clean background. Bold headline at top. CTA at bottom.",

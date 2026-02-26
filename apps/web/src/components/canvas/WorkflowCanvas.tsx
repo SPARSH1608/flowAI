@@ -32,12 +32,12 @@ const edgeTypes = {
 };
 
 const TYPE_COLORS: Record<string, string> = {
-    text: "#52796F", // Muted Green
-    image: "#5C7C99", // Muted Blue
+    text: "#52796F", 
+    image: "#5C7C99", 
     "image[]": "#5C7C99",
-    prompt: "#666666", // Dark Gray
-    video: "#7B6496", // Muted Purple
-    audio: "#966478", // Muted Rose
+    prompt: "#666666", 
+    video: "#7B6496", 
+    audio: "#966478", 
 };
 
 function isValidConnection(connection: any) {
@@ -79,7 +79,7 @@ export default function WorkflowCanvas() {
         if (savedViewport) {
             try {
                 const viewport = JSON.parse(savedViewport) as Viewport;
-                // Wrap in requestAnimationFrame to ensure the D3 selection is ready
+                
                 requestAnimationFrame(() => {
                     setViewport(viewport, { duration: 0 });
                 });

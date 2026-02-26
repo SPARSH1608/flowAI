@@ -1,4 +1,4 @@
-import { executeWorkflow } from "./src/services/executor.service.js";
+import { executeWorkflow } from "./src/services/executorService.js";
 
 const workflow = {
     "nodes": [

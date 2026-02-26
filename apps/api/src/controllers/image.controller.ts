@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { prisma } from "../db/prisma";
 import { v4 as uuidv4 } from "uuid";
 import crypto from "crypto";
-import { uploadToR2 } from "../services/s3.service";
+import { uploadToR2 } from "../services/s3Service";
 
 export async function uploadImage(req: Request, res: Response) {
     console.log("uploadImage called");
@@ -79,7 +79,7 @@ export async function saveGeneratedImage(req: Request, res: Response) {
 
         const r2Url = await uploadToR2(buffer, filename, mimetype);
 
-        // Create DB record
+        
         const image = await prisma.image.create({
             data: {
                 filename: filename,
